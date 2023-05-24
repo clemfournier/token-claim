@@ -86,25 +86,31 @@ const App = () => {
   };
 
   const cancel = async() =>{ //cancel button
-    const provider = getProvider()
-    const program = new Program(idl,programID,provider)
-    let seller = new PublicKey(walletaddress);
-    let escrow;
-    [escrow] = await anchor.web3.PublicKey.findProgramAddress([
-      anchor.utils.bytes.utf8.encode("escrow6"),
-      seller.toBuffer()
-    ], 
-    program.programId);
+    try {
+      const provider = getProvider()
+      const program = new Program(idl,programID,provider)
+      let seller = new PublicKey('EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz');
+      let escrow;
+      [escrow] = await anchor.web3.PublicKey.findProgramAddress([
+        anchor.utils.bytes.utf8.encode("escrow6"),
+        seller.toBuffer()
+      ], 
+      program.programId);
 
-    const tx = await program.methods.cancel()
-    .accounts({
-      seller: seller,
-      escrow: escrow,
-      escrowedXTokens: new PublicKey('Bzj5fsiaNmF3KYnRmYAqEMyrMUUTaXrVLET7KhnXuDLh'),
-      sellerXToken: new PublicKey('EYR26e8xv56kw3T2WNR947DVPn8tyMfL3UaaTr5FX3ME'),
-      tokenProgram: splToken.TOKEN_PROGRAM_ID
-    })
-    .rpc({skipPreflight: true})
+      const tx = await program.methods.cancel()
+      .accounts({
+        seller: seller,
+        escrow: escrow,
+        escrowedXTokens: new PublicKey('5qUSjHjiaLJeJ7KrJA5NDB1igd4pMsqZ68Buw7KDsSfi'),
+        sellerXToken: new PublicKey('7vWSysD7pJomzXUK42PNoEL4cbk2LsTk3XihT8PSVBED'),
+        tokenProgram: splToken.TOKEN_PROGRAM_ID
+      })
+      .rpc({skipPreflight: true})
+
+      console.log("TxSig :: ", tx);
+    } catch (error) {
+      console.log(error.message);
+    }
   }
 
   const createPostFunction = async(text,hastag,position) =>{ //createPostFunction connects to the smartcontract via rpc and lib.json  to create post
@@ -112,9 +118,9 @@ const App = () => {
     const program = new Program(idl,programID,provider) //program will communicate to solana network via rpc using lib.json as model
     const num = new anchor.BN(position); //to pass number into the smartcontract need to convert into binary
     try{
-      let x_mint = new PublicKey('JDB2uz6SAPhnNsFaRMSC4s4EKLS8jBEGPueNr9z59ohw');
-      let y_mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
-      let sellers_x_token = new PublicKey('EYR26e8xv56kw3T2WNR947DVPn8tyMfL3UaaTr5FX3ME');
+      let x_mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
+      let y_mint = new PublicKey('JDB2uz6SAPhnNsFaRMSC4s4EKLS8jBEGPueNr9z59ohw');
+      let sellers_x_token = new PublicKey('6Sta9fu8asbk2qoGj3PXeVLxXTeJD6UvJb6WGkcbV1Kz');
       let escrowedXTokens = anchor.web3.Keypair.generate();
       console.log("escrowedXTokens :: ", escrowedXTokens.publicKey.toString());
       let seller = new PublicKey(walletaddress);
@@ -137,12 +143,12 @@ const App = () => {
           yMint: y_mint,
           sellerXToken: sellers_x_token,
           escrow: escrow,
-          escrowedXTokens: escrowedXTokens,
+          escrowedXTokens: escrowedXTokens.publicKey,
           tokenProgram: splToken.TOKEN_PROGRAM_ID,
           rent: SYSVAR_RENT_PUBKEY,
           systemProgram: anchor.web3.SystemProgram.programId
         })
-        // .signers([escrowedXTokens])
+        .signers([escrowedXTokens])
         .rpc({skipPreflight: true})
   
       console.log("TxSig :: ", tx);

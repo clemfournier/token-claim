@@ -73,6 +73,37 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "cancel",
+      "accounts": [
+        {
+          "name": "seller",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowedXTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "sellerXToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [

@@ -38,7 +38,7 @@ pub mod claimapp {
                 ctx.accounts.token_program.to_account_info(),
                 anchor_spl::token::Transfer {
                     from: ctx.accounts.escrowed_x_tokens.to_account_info(),
-                    to: ctx.accounts.seller_x_token.to_account_info(),
+                    to: ctx.accounts.claimer_x_token.to_account_info(),
                     authority: ctx.accounts.escrow.to_account_info(),
                 },
                 &[&["escrow6".as_bytes(), ctx.accounts.seller.key().as_ref(), &[ctx.accounts.escrow.bump]]],
@@ -46,15 +46,15 @@ pub mod claimapp {
             ctx.accounts.escrowed_x_tokens.amount,
         )?;
 
-        anchor_spl::token::close_account(CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            anchor_spl::token::CloseAccount {
-                account: ctx.accounts.escrowed_x_tokens.to_account_info(),
-                destination: ctx.accounts.seller.to_account_info(),
-                authority: ctx.accounts.escrow.to_account_info(),
-            },
-            &[&["escrow6".as_bytes(), ctx.accounts.seller.key().as_ref(), &[ctx.accounts.escrow.bump]]],
-        ))?;
+        // anchor_spl::token::close_account(CpiContext::new_with_signer(
+        //     ctx.accounts.token_program.to_account_info(),
+        //     anchor_spl::token::CloseAccount {
+        //         account: ctx.accounts.escrowed_x_tokens.to_account_info(),
+        //         destination: ctx.accounts.seller.to_account_info(),
+        //         authority: ctx.accounts.escrow.to_account_info(),
+        //     },
+        //     &[&["escrow6".as_bytes(), ctx.accounts.seller.key().as_ref(), &[ctx.accounts.escrow.bump]]],
+        // ))?;
 
         Ok(())
     }
@@ -63,7 +63,9 @@ pub mod claimapp {
 
 #[derive(Accounts)]
 pub struct Cancel<'info> {
-    pub seller: Signer<'info>,
+    pub claimer: Signer<'info>,
+
+    pub seller: Account<'info, TokenAccount>,
 
     #[account(
         mut,
@@ -78,10 +80,10 @@ pub struct Cancel<'info> {
 
     #[account(
         mut,
-        constraint = seller_x_token.mint == escrowed_x_tokens.mint,
-        constraint = seller_x_token.owner == seller.key()
+        constraint = claimer_x_token.mint == escrowed_x_tokens.mint,
+        constraint = claimer_x_token.owner == claimer.key()
     )]
-    seller_x_token: Account<'info, TokenAccount>,
+    claimer_x_token: Account<'info, TokenAccount>,
 
     token_program: Program<'info, Token>,
 }
