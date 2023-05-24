@@ -1,0 +1,217 @@
+export type Claimapp = {
+  "version": "0.1.0",
+  "name": "claimapp",
+  "instructions": [
+    {
+      "name": "initialize",
+      "accounts": [
+        {
+          "name": "seller",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "`seller`, who is willing to sell his token_x for token_y"
+          ]
+        },
+        {
+          "name": "xMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Token x mint for ex. USDC"
+          ]
+        },
+        {
+          "name": "yMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Token y mint"
+          ]
+        },
+        {
+          "name": "sellerXToken",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "ATA of x_mint"
+          ]
+        },
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowedXTokens",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "xAmount",
+          "type": "u64"
+        },
+        {
+          "name": "yAmount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "escrow",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "escrowedXTokens",
+            "type": "publicKey"
+          },
+          {
+            "name": "yMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "yAmount",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+};
+
+export const IDL: Claimapp = {
+  "version": "0.1.0",
+  "name": "claimapp",
+  "instructions": [
+    {
+      "name": "initialize",
+      "accounts": [
+        {
+          "name": "seller",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "`seller`, who is willing to sell his token_x for token_y"
+          ]
+        },
+        {
+          "name": "xMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Token x mint for ex. USDC"
+          ]
+        },
+        {
+          "name": "yMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Token y mint"
+          ]
+        },
+        {
+          "name": "sellerXToken",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "ATA of x_mint"
+          ]
+        },
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowedXTokens",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "xAmount",
+          "type": "u64"
+        },
+        {
+          "name": "yAmount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "escrow",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "escrowedXTokens",
+            "type": "publicKey"
+          },
+          {
+            "name": "yMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "yAmount",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+};
