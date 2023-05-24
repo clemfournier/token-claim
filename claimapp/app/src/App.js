@@ -3,11 +3,11 @@ import {useEffect, useState} from 'react'
 import * as anchor from "@project-serum/anchor";
 import {Buffer} from 'buffer';
 import idl from './idl.json' //get the smartcontract data structure model from target folder in anchor rust
-import { Connection, PublicKey, clusterApiUrl  } from '@solana/web3.js';
+import { Connection, PublicKey, clusterApiUrl, SYSVAR_RENT_PUBKEY } from '@solana/web3.js';
 import { Program, AnchorProvider, web3, utils } from '@project-serum/anchor';
 import { FeedPostDesign } from './FeedPostDesign';
+import * as splToken from "@solana/spl-token";
 
-const {SystemProgram,Keypair} = web3;
 
 window.Buffer = Buffer
 const programID = new PublicKey(idl.metadata.address)
@@ -15,8 +15,6 @@ const network = clusterApiUrl("devnet")
 const opts = {
   preflightCommitment:"processed",
 }
-const feedPostApp = Keypair.generate();
-const connection = new Connection(network, opts.preflightCommitment);
 
 
 const App = () => {
@@ -87,16 +85,67 @@ const App = () => {
     );
   };
 
+  const cancel = async() =>{ //cancel button
+    const provider = getProvider()
+    const program = new Program(idl,programID,provider)
+    let seller = new PublicKey(walletaddress);
+    let escrow;
+    [escrow] = await anchor.web3.PublicKey.findProgramAddress([
+      anchor.utils.bytes.utf8.encode("escrow6"),
+      seller.toBuffer()
+    ], 
+    program.programId);
+
+    const tx = await program.methods.cancel()
+    .accounts({
+      seller: seller,
+      escrow: escrow,
+      escrowedXTokens: new PublicKey('Bzj5fsiaNmF3KYnRmYAqEMyrMUUTaXrVLET7KhnXuDLh'),
+      sellerXToken: new PublicKey('EYR26e8xv56kw3T2WNR947DVPn8tyMfL3UaaTr5FX3ME'),
+      tokenProgram: splToken.TOKEN_PROGRAM_ID
+    })
+    .rpc({skipPreflight: true})
+  }
+
   const createPostFunction = async(text,hastag,position) =>{ //createPostFunction connects to the smartcontract via rpc and lib.json  to create post
     const provider = getProvider() //checks & verify the dapp it can able to connect solana network
     const program = new Program(idl,programID,provider) //program will communicate to solana network via rpc using lib.json as model
     const num = new anchor.BN(position); //to pass number into the smartcontract need to convert into binary
     try{
-      //post request will verify the lib.json and using metadata address it will verify the programID and create the block in solana
-      const tx = await program.rpc.initialize()
-      //const account_data  = await program.account.feedPostApp.fetch(feedPostApp.publicKey)
-      //console.log('user_data',user_data,'tx',tx,'feedpostapp',feedPostApp.publicKey.toString(),'user',provider.wallet.publicKey.toString(),'systemProgram',SystemProgram.programId.toString())
-      onLoad();
+      let x_mint = new PublicKey('JDB2uz6SAPhnNsFaRMSC4s4EKLS8jBEGPueNr9z59ohw');
+      let y_mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
+      let sellers_x_token = new PublicKey('EYR26e8xv56kw3T2WNR947DVPn8tyMfL3UaaTr5FX3ME');
+      let escrowedXTokens = anchor.web3.Keypair.generate();
+      console.log("escrowedXTokens :: ", escrowedXTokens.publicKey.toString());
+      let seller = new PublicKey(walletaddress);
+      let escrow;
+      [escrow] = await anchor.web3.PublicKey.findProgramAddress([
+        anchor.utils.bytes.utf8.encode("escrow6"),
+        seller.toBuffer()
+      ], 
+      program.programId);
+
+      console.log(escrow.toString());
+      
+      const x_amount = new anchor.BN(40);
+      const y_amount = new anchor.BN(10);
+      
+      const tx = await program.methods.initialize(x_amount, y_amount)
+        .accounts({
+          seller: seller,
+          xMint: x_mint,
+          yMint: y_mint,
+          sellerXToken: sellers_x_token,
+          escrow: escrow,
+          escrowedXTokens: escrowedXTokens,
+          tokenProgram: splToken.TOKEN_PROGRAM_ID,
+          rent: SYSVAR_RENT_PUBKEY,
+          systemProgram: anchor.web3.SystemProgram.programId
+        })
+        // .signers([escrowedXTokens])
+        .rpc({skipPreflight: true})
+  
+      console.log("TxSig :: ", tx);
     }catch(err){
       console.log(err)
     }
@@ -128,6 +177,7 @@ const App = () => {
   return (
     <div className='App'>
       <FeedPostDesign posts={datas} createPostFunction={createPostFunction}  walletaddress={walletaddress} connect={connect} Loading={Loading} />
+      <a onClick={() => cancel()}>CANCEL</a>
     </div>
   );
 };
