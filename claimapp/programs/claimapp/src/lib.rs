@@ -30,6 +30,60 @@ pub mod claimapp {
 
         Ok(())
     }
+
+    pub fn cancel(ctx: Context<Cancel>) -> Result<()> {
+        // return seller's x_token back to him/her
+        anchor_spl::token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                anchor_spl::token::Transfer {
+                    from: ctx.accounts.escrowed_x_tokens.to_account_info(),
+                    to: ctx.accounts.seller_x_token.to_account_info(),
+                    authority: ctx.accounts.escrow.to_account_info(),
+                },
+                &[&["escrow6".as_bytes(), ctx.accounts.seller.key().as_ref(), &[ctx.accounts.escrow.bump]]],
+            ),
+            ctx.accounts.escrowed_x_tokens.amount,
+        )?;
+
+        anchor_spl::token::close_account(CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            anchor_spl::token::CloseAccount {
+                account: ctx.accounts.escrowed_x_tokens.to_account_info(),
+                destination: ctx.accounts.seller.to_account_info(),
+                authority: ctx.accounts.escrow.to_account_info(),
+            },
+            &[&["escrow6".as_bytes(), ctx.accounts.seller.key().as_ref(), &[ctx.accounts.escrow.bump]]],
+        ))?;
+
+        Ok(())
+    }
+
+}
+
+#[derive(Accounts)]
+pub struct Cancel<'info> {
+    pub seller: Signer<'info>,
+
+    #[account(
+        mut,
+        close = seller, constraint = escrow.authority == seller.key(),
+        seeds = ["escrow6".as_bytes(), escrow.authority.as_ref()],
+        bump = escrow.bump,
+    )]
+    pub escrow: Account<'info, Escrow>,
+
+    #[account(mut, constraint = escrowed_x_tokens.key() == escrow.escrowed_x_tokens)]
+    pub escrowed_x_tokens: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        constraint = seller_x_token.mint == escrowed_x_tokens.mint,
+        constraint = seller_x_token.owner == seller.key()
+    )]
+    seller_x_token: Account<'info, TokenAccount>,
+
+    token_program: Program<'info, Token>,
 }
 
 #[derive(Accounts)]
