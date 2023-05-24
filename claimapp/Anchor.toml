@@ -8,7 +8,7 @@ url = "https://anchor.projectserum.com"
 
 [provider]
 cluster = "devnet"
-wallet = "/home/clement/.config/solana/id.json" //change path for your particular id json path
+wallet = "/home/clement/.config/solana/id.json"
 
 [scripts]
 test = "yarn run mocha -t 1000000 tests/"
