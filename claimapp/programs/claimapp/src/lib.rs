@@ -2,6 +2,12 @@ use anchor_lang::prelude::*;
 use anchor_lang::Accounts;
 use anchor_lang::solana_program::program::invoke_signed;
 use anchor_lang::solana_program::entrypoint::ProgramResult;
+use solana_program::{
+    account_info::AccountInfo,
+    entrypoint,
+    entrypoint::ProgramResult,
+    pubkey::Pubkey,
+};
 
 declare_id!("79GRqHSs8MPinewuYuaSyQgTYD1WruUguy8JvRdMLe7T");
 

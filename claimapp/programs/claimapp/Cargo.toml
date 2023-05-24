@@ -18,3 +18,4 @@ default = []
 [dependencies]
 anchor-lang = "0.25.0"
 spl-token = "3.2"
+solana_program = "1.14.18"
