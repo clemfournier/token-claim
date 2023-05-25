@@ -78,9 +78,14 @@
       "name": "cancel",
       "accounts": [
         {
-          "name": "seller",
+          "name": "claimer",
           "isMut": false,
           "isSigner": true
+        },
+        {
+          "name": "seller",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "escrow",
@@ -93,7 +98,7 @@
           "isSigner": false
         },
         {
-          "name": "sellerXToken",
+          "name": "claimerXToken",
           "isMut": true,
           "isSigner": false
         },

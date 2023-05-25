@@ -99,10 +99,11 @@ const App = () => {
 
       const tx = await program.methods.cancel()
       .accounts({
-        seller: seller,
+        claimer: new PublicKey('GvnCyJqkHBeEzrbafRtZVjBv17uaHvxXKmKtRv5Y6AwS'),
+        seller,
         escrow: escrow,
         escrowedXTokens: new PublicKey('5qUSjHjiaLJeJ7KrJA5NDB1igd4pMsqZ68Buw7KDsSfi'),
-        sellerXToken: new PublicKey('7vWSysD7pJomzXUK42PNoEL4cbk2LsTk3XihT8PSVBED'),
+        claimerXToken: new PublicKey('7vWSysD7pJomzXUK42PNoEL4cbk2LsTk3XihT8PSVBED'),
         tokenProgram: splToken.TOKEN_PROGRAM_ID
       })
       .rpc({skipPreflight: true})
