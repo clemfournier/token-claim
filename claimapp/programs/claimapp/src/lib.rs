@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
-declare_id!("79GRqHSs8MPinewuYuaSyQgTYD1WruUguy8JvRdMLe7T");
+// declare_id!("79GRqHSs8MPinewuYuaSyQgTYD1WruUguy8JvRdMLe7T");
+declare_id!("7tnWDxyukYms6pdd2hj4sFV7VBMsFNWqfMUKkpcDYSap");
 
 #[program]
 pub mod claimapp {
