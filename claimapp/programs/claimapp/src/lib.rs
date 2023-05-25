@@ -8,44 +8,69 @@ declare_id!("7tnWDxyukYms6pdd2hj4sFV7VBMsFNWqfMUKkpcDYSap");
 pub mod claimapp {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, x_amount: u64, y_amount: u64) -> Result<()> {
-        let escrow = &mut ctx.accounts.escrow;
-        escrow.bump = *ctx.bumps.get("escrow").unwrap();
-        escrow.authority = ctx.accounts.seller.key();
-        escrow.escrowed_x_tokens = ctx.accounts.escrowed_x_tokens.key();
-        escrow.y_amount = y_amount; // number of token sellers wants in exchange
-        escrow.y_mint = ctx.accounts.y_mint.key(); // token seller wants in exchange
+    pub fn init_contract(ctx: Context<InitContract>, limit: u64) -> Result<()> {
+        let claim_account_data = &mut ctx.accounts.claim_contract_account;
+        claim_account_data.bump = *ctx.bumps.get("claim_contract_account").unwrap();
 
-        // Transfer seller's x_token in program owned escrow token account
-        anchor_spl::token::transfer(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                anchor_spl::token::Transfer {
-                    from: ctx.accounts.seller_x_token.to_account_info(),
-                    to: ctx.accounts.escrowed_x_tokens.to_account_info(),
-                    authority: ctx.accounts.seller.to_account_info(),
-                },
-            ),
-            x_amount,
-        )?;
+        claim_account_data.is_active = true;
+        claim_account_data.limit = limit;
+        claim_account_data.claimed = 0;
+
+        msg!("Created a new claim contract account, limit {0}", limit);
 
         Ok(())
     }
 
-    pub fn cancel(ctx: Context<Cancel>) -> Result<()> {
-        // return seller's x_token back to him/her
+    pub fn init_claim(ctx: Context<InitClaim>) -> Result<()> {
+        let claim_account_data = &mut ctx.accounts.claim_account;
+        claim_account_data.bump = *ctx.bumps.get("claim_account").unwrap();
+
+        claim_account_data.is_claimed = false;
+
+        msg!("Created a new claim account {0}", ctx.accounts.claim_account.key());
+
+        Ok(())
+    }
+
+    pub fn init_treasury(ctx: Context<InitTreasury>, amount: u64) -> Result<()> {
+        let escrow = &mut ctx.accounts.treasury;
+        escrow.bump = *ctx.bumps.get("treasury").unwrap();
+        escrow.depositor = ctx.accounts.depositor.key();
+        escrow.treasury_token_account = ctx.accounts.treasury_token_account.key();
+
+        anchor_spl::token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                anchor_spl::token::Transfer {
+                    from: ctx.accounts.depositor_token_account.to_account_info(),
+                    to: ctx.accounts.treasury_token_account.to_account_info(),
+                    authority: ctx.accounts.depositor.to_account_info(),
+                },
+            ),
+            amount,
+        )?;
+
+        msg!("Created a new treasury with {0} token", amount);
+
+        Ok(())
+    }
+
+    pub fn claim_token(ctx: Context<ClaimToken>) -> Result<()> {
         anchor_spl::token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 anchor_spl::token::Transfer {
                     from: ctx.accounts.escrowed_x_tokens.to_account_info(),
                     to: ctx.accounts.claimer_x_token.to_account_info(),
-                    authority: ctx.accounts.escrow.to_account_info(),
+                    authority: ctx.accounts.escrow.to_account_info(), 
                 },
                 &[&["escrow6".as_bytes(), ctx.accounts.seller.key().as_ref(), &[ctx.accounts.escrow.bump]]],
             ),
             ctx.accounts.escrowed_x_tokens.amount,
         )?;
+
+        Ok(())
+    }
 
         // anchor_spl::token::close_account(CpiContext::new_with_signer(
         //     ctx.accounts.token_program.to_account_info(),
@@ -57,16 +82,13 @@ pub mod claimapp {
         //     &[&["escrow6".as_bytes(), ctx.accounts.seller.key().as_ref(), &[ctx.accounts.escrow.bump]]],
         // ))?;
 
-        Ok(())
-    }
-
 }
 
 #[derive(Accounts)]
 pub struct Cancel<'info> {
     pub claimer: Signer<'info>,
 
-    pub seller: Account<'info, TokenAccount>,
+    pub seller: AccountInfo<'info>,
 
     #[account(
         mut,
@@ -90,52 +112,127 @@ pub struct Cancel<'info> {
 }
 
 #[derive(Accounts)]
-pub struct Initialize<'info> {
+pub struct InitTreasury<'info> {
 
-    /// `seller`, who is willing to sell his token_x for token_y
+    /// Deposit authority
+    /// TODO: Check if it's the authorized account
     #[account(mut)]
-    seller: Signer<'info>,
+    depositor: Signer<'info>,
 
-    /// Token x mint for ex. USDC
-    x_mint: Account<'info, Mint>,
-    /// Token y mint 
-    y_mint: Account<'info, Mint>,
+    /// Token mint
+    mint: Account<'info, Mint>,
 
     /// ATA of x_mint 
-    #[account(mut, constraint = seller_x_token.mint == x_mint.key() && seller_x_token.owner == seller.key())] 
-    seller_x_token: Account<'info, TokenAccount>,
+    #[account(mut, constraint = depositor_token_account.mint == mint.key() && depositor_token_account.owner == depositor.key())] 
+    depositor_token_account: Account<'info, TokenAccount>,
 
     #[account(
         init, 
-        payer = seller,  
-        space=Escrow::LEN,
-        seeds = ["escrow6".as_bytes(), seller.key().as_ref()],
+        payer = depositor,  
+        space=Treasury::LEN,
+        seeds = ["treasury6".as_bytes(), depositor.key().as_ref()],
         bump,
     )]
-    pub escrow: Account<'info, Escrow>,
+    pub treasury: Account<'info, Treasury>,
 
     #[account(
         init,
-        payer = seller,
-        token::mint = x_mint,
-        token::authority = escrow,
+        payer = depositor,
+        token::mint = mint,
+        token::authority = treasury,
     )]
-    escrowed_x_tokens: Account<'info, TokenAccount>,
+    treasury_token_account: Account<'info, TokenAccount>,
 
     token_program: Program<'info, Token>,
     rent: Sysvar<'info, Rent>,
     system_program: Program<'info, System>,
 }
 
-#[account]
-pub struct Escrow {
-    authority: Pubkey,
-    bump: u8,
-    escrowed_x_tokens: Pubkey,
-    y_mint: Pubkey,
-    y_amount: u64,
+#[derive(Accounts)]
+pub struct InitContract<'info> {
+    // Making a global account for storing votes
+    #[account(
+        init, 
+        payer = signer, 
+        space = Contract::LEN,
+        seeds = [b"claimcontract".as_ref(), signer.key().as_ref()],
+        bump,
+    )] 
+    pub claim_contract_account: Account<'info, Contract>,
+
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
 }
 
-impl Escrow {
-    pub const LEN: usize = 8 + 1+ 32 + 32 + 32 + 8;
+#[derive(Accounts)]
+pub struct InitClaim<'info> {
+    // Making a global account for storing votes
+    #[account(
+        init, 
+        payer = signer, 
+        space = Claim::LEN,
+        seeds = [b"claim".as_ref(), signer.key().as_ref()],
+        bump,
+    )] 
+    pub claim_account: Account<'info, Claim>,
+
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[account]
+pub struct Treasury {
+    depositor: Pubkey,
+    bump: u8,
+    treasury_token_account: Pubkey,
+    deposited: u64
+}
+
+impl Treasury {
+    const LEN: usize = 
+        8 + // discriminator
+        32 + // pubkey
+        1 + // bump
+        32 + // pubkey
+        8; // u64
+}
+
+#[account]
+#[derive(Default)]
+pub struct Contract {
+    pub is_active: bool,
+    pub bump: u8,
+    pub claimed: u64,
+    pub limit: u64
+}
+
+impl Contract {
+    const LEN: usize = 
+        8 + // discriminator
+        1 + // bool
+        1 + // bump
+        8 + // u64
+        8; // u64
+}
+
+#[account]
+#[derive(Default)]
+pub struct Claim {
+    pub is_claimed: bool,
+    pub bump: u8,
+    pub owner: Pubkey,
+    pub mint: Pubkey,
+}
+
+impl Claim {
+    const LEN: usize = 
+        8 + // discriminator
+        1 + // bool
+        1 + // bump
+        32 + // Pubkey
+        32; // Pubkey
 }
