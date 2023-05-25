@@ -85,20 +85,20 @@ pub mod claimapp {
 }
 
 #[derive(Accounts)]
-pub struct Cancel<'info> {
+pub struct ClaimToken<'info> {
     pub claimer: Signer<'info>,
 
     pub seller: AccountInfo<'info>,
 
     #[account(
         mut,
-        close = seller, constraint = escrow.authority == seller.key(),
-        seeds = ["escrow6".as_bytes(), escrow.authority.as_ref()],
+        close = seller, constraint = escrow.depositor == seller.key(),
+        seeds = ["escrow6".as_bytes(), escrow.depositor.as_ref()],
         bump = escrow.bump,
     )]
-    pub escrow: Account<'info, Escrow>,
+    pub escrow: Account<'info, Treasury>,
 
-    #[account(mut, constraint = escrowed_x_tokens.key() == escrow.escrowed_x_tokens)]
+    #[account(mut, constraint = escrowed_x_tokens.key() == escrow.treasury_token_account)]
     pub escrowed_x_tokens: Account<'info, TokenAccount>,
 
     #[account(
