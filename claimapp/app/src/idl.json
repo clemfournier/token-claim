@@ -3,34 +3,74 @@
   "name": "claimapp",
   "instructions": [
     {
-      "name": "initialize",
+      "name": "initContract",
       "accounts": [
         {
-          "name": "seller",
+          "name": "claimContractAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "limit",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initClaim",
+      "accounts": [
+        {
+          "name": "claimAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initTreasury",
+      "accounts": [
+        {
+          "name": "depositor",
           "isMut": true,
           "isSigner": true,
           "docs": [
-            "`seller`, who is willing to sell his token_x for token_y"
+            "Deposit authority",
+            "TODO: Check if it's the authorized account"
           ]
         },
         {
-          "name": "xMint",
+          "name": "mint",
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "Token x mint for ex. USDC"
+            "Token mint"
           ]
         },
         {
-          "name": "yMint",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Token y mint"
-          ]
-        },
-        {
-          "name": "sellerXToken",
+          "name": "depositorTokenAccount",
           "isMut": true,
           "isSigner": false,
           "docs": [
@@ -38,12 +78,12 @@
           ]
         },
         {
-          "name": "escrow",
+          "name": "treasury",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowedXTokens",
+          "name": "treasuryTokenAccount",
           "isMut": true,
           "isSigner": true
         },
@@ -65,17 +105,13 @@
       ],
       "args": [
         {
-          "name": "xAmount",
-          "type": "u64"
-        },
-        {
-          "name": "yAmount",
+          "name": "amount",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "cancel",
+      "name": "claimToken",
       "accounts": [
         {
           "name": "claimer",
@@ -113,12 +149,12 @@
   ],
   "accounts": [
     {
-      "name": "Escrow",
+      "name": "Treasury",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "authority",
+            "name": "depositor",
             "type": "publicKey"
           },
           {
@@ -126,22 +162,66 @@
             "type": "u8"
           },
           {
-            "name": "escrowedXTokens",
+            "name": "treasuryTokenAccount",
             "type": "publicKey"
           },
           {
-            "name": "yMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "yAmount",
+            "name": "deposited",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Contract",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "claimed",
+            "type": "u64"
+          },
+          {
+            "name": "limit",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Claim",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "isClaimed",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "mint",
+            "type": "publicKey"
           }
         ]
       }
     }
   ],
   "metadata": {
-    "address": "79GRqHSs8MPinewuYuaSyQgTYD1WruUguy8JvRdMLe7T"
+    "address": "Bh3kNWhE4PbiSAzcCNRfbPPfewNk5y6HFxWhYMRok7xm"
   }
 }
