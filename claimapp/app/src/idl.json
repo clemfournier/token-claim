@@ -29,27 +29,6 @@
       ]
     },
     {
-      "name": "initClaim",
-      "accounts": [
-        {
-          "name": "claimAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "initTreasury",
       "accounts": [
         {
@@ -111,35 +90,60 @@
       ]
     },
     {
-      "name": "claimToken",
+      "name": "initClaim",
       "accounts": [
         {
-          "name": "claimer",
-          "isMut": false,
+          "name": "signer",
+          "isMut": true,
           "isSigner": true
         },
         {
-          "name": "seller",
+          "name": "depositor",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "escrow",
+          "name": "claimAccount",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "escrowedXTokens",
+          "name": "treasury",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "claimerXToken",
+          "name": "treasuryTokenAccount",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "claimerTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "claimContractAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -148,6 +152,26 @@
     }
   ],
   "accounts": [
+    {
+      "name": "ClaimTreasury",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "depositor",
+            "type": "publicKey"
+          },
+          {
+            "name": "treasuryTokenAccount",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
     {
       "name": "Treasury",
       "type": {
@@ -202,10 +226,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "isClaimed",
-            "type": "bool"
-          },
-          {
             "name": "bump",
             "type": "u8"
           },
@@ -216,6 +236,10 @@
           {
             "name": "mint",
             "type": "publicKey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
           }
         ]
       }
