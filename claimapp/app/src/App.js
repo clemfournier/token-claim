@@ -163,18 +163,17 @@ const App = () => {
       const tx = await program.methods.initClaim()
       .accounts({
         signer,
-        depositor: new PublicKey('EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz'),
+        depositor,
         claimAccount: escrow,
         treasury, //: new PublicKey('BqZUhaHrdBxyX8Rkqva5cmQb8nuoZztaRzpRmDZFpNt5'),
         treasuryTokenAccount: new PublicKey('6NDDmYTC4fwJzh17Bg2dRC3WkbN2fEySc1Rkr3CLKD1F'),
         claimerTokenAccount: new PublicKey('6Mac2LbWjvaUJXbHZ1w3Ux7mVYUDt74vsBXVvF21wwuB'),
         claimContractAccount: new PublicKey('DygGxBaqRi5G8ZfUo8SF6CjBdjU6wvpKqJP93vcmWTXq'),
-        mint: new PublicKey('BRcKjekc3ZrJ8MbkGjMo115tseouwEzWfysESYbT24DL'),
+        mint: new PublicKey('FUXjAEefwYaaoBAMq2Nx4wb4TwYxNmKox8JNWHKuwjWv'),
         tokenProgram: splToken.TOKEN_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: anchor.web3.SystemProgram.programId
       })
-      .signers([])
       .rpc({skipPreflight: true})
 
       console.log("TxSig :: ", tx);

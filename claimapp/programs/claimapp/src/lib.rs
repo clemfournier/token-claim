@@ -172,7 +172,7 @@ pub struct InitClaim<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
-    /// CHECK:
+    #[account(mut)]
     pub depositor: AccountInfo<'info>,
 
     // Claim account, PDA to store the claim information 
