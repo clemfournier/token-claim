@@ -88,6 +88,7 @@ pub mod claimapp {
 pub struct ClaimToken<'info> {
     pub claimer: Signer<'info>,
 
+    /// CHECK:
     pub seller: AccountInfo<'info>,
 
     #[account(
