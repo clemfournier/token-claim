@@ -85,6 +85,60 @@ const App = () => {
     );
   };
 
+  const initClaim = async() => {
+    try {
+      const provider = getProvider();
+      const program = new Program(idl,programID,provider);
+      const signer = new PublicKey(walletaddress);
+      let escrow;
+      [escrow] = await anchor.web3.PublicKey.findProgramAddress([
+        anchor.utils.bytes.utf8.encode("claim"),
+        signer.toBuffer()
+      ], 
+      program.programId);
+      console.log('claimAccount', escrow.toString(), 'signer', signer.toString());
+      const limit = new anchor.BN(10);
+      const tx = await program.methods.initContract(limit)
+      .accounts({
+        claimAccount: escrow,
+        signer,
+        systemProgram: anchor.web3.SystemProgram.programId
+      })
+      .rpc({skipPreflight: true});
+
+      console.log("TxSig :: ", tx);
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+
+  const initContract = async() => {
+    try {
+      const provider = getProvider();
+      const program = new Program(idl,programID,provider);
+      const signer = new PublicKey(walletaddress);
+      let escrow;
+      [escrow] = await anchor.web3.PublicKey.findProgramAddress([
+        anchor.utils.bytes.utf8.encode("claimcontract"),
+        signer.toBuffer()
+      ], 
+      program.programId);
+      console.log('claimContractAccount', escrow.toString(), 'signer', signer.toString());
+      const limit = new anchor.BN(10);
+      const tx = await program.methods.initContract(limit)
+      .accounts({
+        claimContractAccount: escrow,
+        signer,
+        systemProgram: anchor.web3.SystemProgram.programId
+      })
+      .rpc({skipPreflight: true});
+
+      console.log("TxSig :: ", tx);
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+
   const cancel = async() =>{ //cancel button
     try {
       const provider = getProvider()
@@ -184,7 +238,8 @@ const App = () => {
   return (
     <div className='App'>
       <FeedPostDesign posts={datas} createPostFunction={createPostFunction}  walletaddress={walletaddress} connect={connect} Loading={Loading} />
-      <a onClick={() => cancel()}>CANCEL</a>
+      <a style={{color: 'white'}} onClick={() => cancel()}>CANCEL</a>
+      <a style={{color: 'white'}} onClick={() => initContract()}>INIT CONTRACT</a>
     </div>
   );
 };
