@@ -172,7 +172,7 @@ pub struct InitClaim<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
-    #[account(mut)]
+    /// CHECK:
     pub depositor: AccountInfo<'info>,
 
     // Claim account, PDA to store the claim information 
@@ -206,10 +206,10 @@ pub struct InitClaim<'info> {
     claimer_token_account: Account<'info, TokenAccount>,
 
     // Claim contract account, global account for storing claim counts
-    #[account(
-        seeds = [b"claimcontract".as_ref(), depositor.key().as_ref()],
-        bump = claim_contract_account.bump,
-    )] 
+    #[account(mut)]
+    //     seeds = [b"claimcontract".as_ref(), depositor.key().as_ref()],
+    //     bump = claim_contract_account.bump,
+    // )] 
     pub claim_contract_account: Account<'info, Contract>,
 
     // NFT mint of the owner
