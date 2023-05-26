@@ -8,7 +8,7 @@
         {
           "name": "claimContractAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "signer",
@@ -124,7 +124,7 @@
         },
         {
           "name": "claimContractAccount",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -204,10 +204,6 @@
           {
             "name": "isActive",
             "type": "bool"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
           },
           {
             "name": "claimed",
