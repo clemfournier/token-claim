@@ -188,7 +188,7 @@ pub struct InitClaim<'info> {
     // Treasury account, account who hold the token's token account
     #[account(
         mut,
-        seeds = ["treasury6".as_bytes(), treasury.depositor.as_ref()],
+        seeds = ["treasury6".as_bytes(), depositor.key().as_ref()],
         bump = treasury.bump,
     )]
     pub treasury: Account<'info, ClaimTreasury>,

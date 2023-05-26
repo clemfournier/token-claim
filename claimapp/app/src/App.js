@@ -139,27 +139,34 @@ const App = () => {
     }
   }
 
-  const cancel = async() =>{ //cancel button
+  const initClaimV2 = async() =>{ //cancel button
     try {
-      const provider = getProvider()
-      const program = new Program(idl,programID,provider)
-      let seller = new PublicKey('EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz');
+      const provider = getProvider();
+      const program = new Program(idl,programID,provider);
+      const signer = new PublicKey(walletaddress)
+
       let escrow;
       [escrow] = await anchor.web3.PublicKey.findProgramAddress([
-        anchor.utils.bytes.utf8.encode("escrow6"),
-        seller.toBuffer()
+        anchor.utils.bytes.utf8.encode("claim"),
+        signer.toBuffer()
       ], 
       program.programId);
 
-      const tx = await program.methods.cancel()
+      const tx = await program.methods.initClaim()
       .accounts({
-        claimer: new PublicKey('GvnCyJqkHBeEzrbafRtZVjBv17uaHvxXKmKtRv5Y6AwS'),
-        seller,
-        escrow: escrow,
-        escrowedXTokens: new PublicKey('5qUSjHjiaLJeJ7KrJA5NDB1igd4pMsqZ68Buw7KDsSfi'),
-        claimerXToken: new PublicKey('7vWSysD7pJomzXUK42PNoEL4cbk2LsTk3XihT8PSVBED'),
-        tokenProgram: splToken.TOKEN_PROGRAM_ID
+        signer,
+        depositor: new PublicKey('EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz'),
+        claimAccount: escrow,
+        treasury: new PublicKey('BqZUhaHrdBxyX8Rkqva5cmQb8nuoZztaRzpRmDZFpNt5'),
+        treasuryTokenAccount: new PublicKey('6NDDmYTC4fwJzh17Bg2dRC3WkbN2fEySc1Rkr3CLKD1F'),
+        claimerTokenAccount: new PublicKey('6Mac2LbWjvaUJXbHZ1w3Ux7mVYUDt74vsBXVvF21wwuB'),
+        claimContractAccount: new PublicKey('DygGxBaqRi5G8ZfUo8SF6CjBdjU6wvpKqJP93vcmWTXq'),
+        mint: new PublicKey('BRcKjekc3ZrJ8MbkGjMo115tseouwEzWfysESYbT24DL'),
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: anchor.web3.SystemProgram.programId
       })
+      .signers([])
       .rpc({skipPreflight: true})
 
       console.log("TxSig :: ", tx);
@@ -168,42 +175,38 @@ const App = () => {
     }
   }
 
-  const createPostFunction = async(text,hastag,position) =>{ //createPostFunction connects to the smartcontract via rpc and lib.json  to create post
-    const provider = getProvider() //checks & verify the dapp it can able to connect solana network
-    const program = new Program(idl,programID,provider) //program will communicate to solana network via rpc using lib.json as model
-    const num = new anchor.BN(position); //to pass number into the smartcontract need to convert into binary
+  const initTreasury = async() => {
+    const provider = getProvider();
+    const program = new Program(idl,programID,provider);
+
     try{
-      let x_mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
-      let y_mint = new PublicKey('JDB2uz6SAPhnNsFaRMSC4s4EKLS8jBEGPueNr9z59ohw');
-      let sellers_x_token = new PublicKey('6Sta9fu8asbk2qoGj3PXeVLxXTeJD6UvJb6WGkcbV1Kz');
-      let escrowedXTokens = anchor.web3.Keypair.generate();
-      console.log("escrowedXTokens :: ", escrowedXTokens.publicKey.toString());
-      let seller = new PublicKey(walletaddress);
+      let depositor = new PublicKey(walletaddress);
+      let mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
+      let depositor_token_account = new PublicKey('6Sta9fu8asbk2qoGj3PXeVLxXTeJD6UvJb6WGkcbV1Kz');
+      let treasuryTokenAccount = anchor.web3.Keypair.generate();
+
+      console.log('treasury token account', treasuryTokenAccount.publicKey.toString())
+
       let escrow;
       [escrow] = await anchor.web3.PublicKey.findProgramAddress([
-        anchor.utils.bytes.utf8.encode("escrow6"),
-        seller.toBuffer()
+        anchor.utils.bytes.utf8.encode("treasury6"),
+        depositor.toBuffer()
       ], 
       program.programId);
-
-      console.log(escrow.toString());
+      const amount = new anchor.BN(10);
       
-      const x_amount = new anchor.BN(40);
-      const y_amount = new anchor.BN(10);
-      
-      const tx = await program.methods.initialize(x_amount, y_amount)
+      const tx = await program.methods.initTreasury(amount)
         .accounts({
-          seller: seller,
-          xMint: x_mint,
-          yMint: y_mint,
-          sellerXToken: sellers_x_token,
-          escrow: escrow,
-          escrowedXTokens: escrowedXTokens.publicKey,
+          depositor,
+          mint,
+          depositorTokenAccount: depositor_token_account,
+          treasury: escrow,
+          treasuryTokenAccount: treasuryTokenAccount.publicKey,
           tokenProgram: splToken.TOKEN_PROGRAM_ID,
           rent: SYSVAR_RENT_PUBKEY,
           systemProgram: anchor.web3.SystemProgram.programId
         })
-        .signers([escrowedXTokens])
+        .signers([treasuryTokenAccount])
         .rpc({skipPreflight: true})
   
       console.log("TxSig :: ", tx);
@@ -212,34 +215,17 @@ const App = () => {
     }
   }
 
-  // const getPosts = async() =>{
-  //   const provider = getProvider();
-  //   const program = new Program(idl,programID,provider)
-  //   try{
-  //     setLoading(true)
-  //     Promise.all(
-  //       ((await connection.getProgramAccounts(programID)).map(async(tx,index)=>( //no need to write smartcontract to get the data, just pulling all transaction respective programID and showing to user
-  //         {
-  //         ...(await program.account.feedPostApp.fetch(tx.pubkey)),
-  //           pubkey:tx.pubkey.toString(),
-  //       }
-  //       )))
-  //   ).then(result=>{
-  //     result.sort(function(a,b){return b.position.words[0] - a.position.words[0] })
-  //     setData([...result])
-  //   })
-  //   }catch(err){
-  //     console.log(err)
-  //   }finally{
-  //     setLoading(false)
-  //   }
-  // }
-
   return (
     <div className='App'>
-      <FeedPostDesign posts={datas} createPostFunction={createPostFunction}  walletaddress={walletaddress} connect={connect} Loading={Loading} />
-      <a style={{color: 'white'}} onClick={() => cancel()}>CANCEL</a>
-      <a style={{color: 'white'}} onClick={() => initContract()}>INIT CONTRACT</a>
+      <div>
+        <a style={{color: 'white'}} onClick={() => initTreasury()}>INIT TREASURY</a>
+      </div>
+      <div>
+        <a style={{color: 'white'}} onClick={() => initClaimV2()}>INIT CLAIM</a>
+      </div>
+      <div>
+        <a style={{color: 'white'}} onClick={() => initContract()}>INIT CONTRACT</a>
+      </div>
     </div>
   );
 };
