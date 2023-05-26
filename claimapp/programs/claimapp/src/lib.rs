@@ -85,15 +85,14 @@ pub mod claimapp {
 
         // UPDATE CONTRACT DATA
         // CHECK IF WE REACHED THE LIMIT
-        let claim_account_data = &mut ctx.accounts.claim_contract_account;
-        claim_account_data.claimed += 1;
+        ctx.accounts.claim_contract_account.claimed += 1;
 
         msg!("{0} claimed {1} tokens, for NFT {2}. {3} people have now claimed for {4} max", 
             ctx.accounts.signer.key(),
             amount,
             ctx.accounts.mint.key(),
-            claim_account_data.claimed, 
-            claim_account_data.limit
+            ctx.accounts.claim_contract_account.claimed, 
+            ctx.accounts.claim_contract_account.limit
         );
     
         Ok(())
@@ -153,10 +152,8 @@ pub struct InitContract<'info> {
     // Making a global account for storing votes
     #[account(
         init, 
-        payer = signer, 
-        space = Contract::LEN,
-        seeds = [b"claimcontract".as_ref(), signer.key().as_ref()],
-        bump,
+        payer = signer,
+        space = Contract::LEN
     )] 
     pub claim_contract_account: Account<'info, Contract>,
 
@@ -206,10 +203,10 @@ pub struct InitClaim<'info> {
     claimer_token_account: Account<'info, TokenAccount>,
 
     // Claim contract account, global account for storing claim counts
-    #[account(mut)]
     //     seeds = [b"claimcontract".as_ref(), depositor.key().as_ref()],
     //     bump = claim_contract_account.bump,
     // )] 
+    #[account(mut)]
     pub claim_contract_account: Account<'info, Contract>,
 
     // NFT mint of the owner
