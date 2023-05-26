@@ -9,12 +9,9 @@ pub mod claimapp {
     use super::*;
 
     pub fn init_contract(ctx: Context<InitContract>, limit: u64) -> Result<()> {
-        let claim_account_data = &mut ctx.accounts.claim_contract_account;
-        claim_account_data.bump = *ctx.bumps.get("claim_contract_account").unwrap();
-
-        claim_account_data.is_active = true;
-        claim_account_data.limit = limit;
-        claim_account_data.claimed = 0;
+        ctx.accounts.claim_contract_account.is_active = true;
+        ctx.accounts.claim_contract_account.limit = limit;
+        ctx.accounts.claim_contract_account.claimed = 0;
 
         msg!("Created a new claim contract account, limit {0}", limit);
 
@@ -246,7 +243,6 @@ impl Treasury {
 #[derive(Default)]
 pub struct Contract {
     pub is_active: bool,
-    pub bump: u8,
     pub claimed: u64,
     pub limit: u64
 }
@@ -255,7 +251,6 @@ impl Contract {
     const LEN: usize = 
         8 + // discriminator
         1 + // bool
-        1 + // bump
         8 + // u64
         8; // u64
 }

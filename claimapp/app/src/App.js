@@ -117,20 +117,21 @@ const App = () => {
       const provider = getProvider();
       const program = new Program(idl,programID,provider);
       const signer = new PublicKey(walletaddress);
-      let escrow;
-      [escrow] = await anchor.web3.PublicKey.findProgramAddress([
-        anchor.utils.bytes.utf8.encode("claimcontract"),
-        signer.toBuffer()
-      ], 
-      program.programId);
-      console.log('claimContractAccount', escrow.toString(), 'signer', signer.toString());
+      let escrow = anchor.web3.Keypair.generate();
+      // [escrow] = await anchor.web3.PublicKey.findProgramAddress([
+      //   anchor.utils.bytes.utf8.encode("claimcontract"),
+      //   signer.toBuffer()
+      // ], 
+      // program.programId);
+      console.log('claimContractAccount', escrow.publicKey.toString(), 'signer', signer.toString());
       const limit = new anchor.BN(10);
       const tx = await program.methods.initContract(limit)
       .accounts({
-        claimContractAccount: escrow,
+        claimContractAccount: escrow.publicKey,
         signer,
         systemProgram: anchor.web3.SystemProgram.programId
       })
+      .signers([escrow])
       .rpc({skipPreflight: true});
 
       console.log("TxSig :: ", tx);
