@@ -143,7 +143,15 @@ const App = () => {
     try {
       const provider = getProvider();
       const program = new Program(idl,programID,provider);
-      const signer = new PublicKey(walletaddress)
+      const signer = new PublicKey(walletaddress);
+      const depositor = new PublicKey('EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz')
+
+      let treasury;
+      [treasury] = await anchor.web3.PublicKey.findProgramAddress([
+        anchor.utils.bytes.utf8.encode("treasury6"),
+        depositor.toBuffer()
+      ], 
+      program.programId);
 
       let escrow;
       [escrow] = await anchor.web3.PublicKey.findProgramAddress([
@@ -157,7 +165,7 @@ const App = () => {
         signer,
         depositor: new PublicKey('EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz'),
         claimAccount: escrow,
-        treasury: new PublicKey('BqZUhaHrdBxyX8Rkqva5cmQb8nuoZztaRzpRmDZFpNt5'),
+        treasury, //: new PublicKey('BqZUhaHrdBxyX8Rkqva5cmQb8nuoZztaRzpRmDZFpNt5'),
         treasuryTokenAccount: new PublicKey('6NDDmYTC4fwJzh17Bg2dRC3WkbN2fEySc1Rkr3CLKD1F'),
         claimerTokenAccount: new PublicKey('6Mac2LbWjvaUJXbHZ1w3Ux7mVYUDt74vsBXVvF21wwuB'),
         claimContractAccount: new PublicKey('DygGxBaqRi5G8ZfUo8SF6CjBdjU6wvpKqJP93vcmWTXq'),
@@ -171,7 +179,7 @@ const App = () => {
 
       console.log("TxSig :: ", tx);
     } catch (error) {
-      console.log(error.message);
+      console.log(error);
     }
   }
 
