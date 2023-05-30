@@ -29,6 +29,54 @@
       ]
     },
     {
+      "name": "initTreasuryTokenAccounts",
+      "accounts": [
+        {
+          "name": "depositor",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "Deposit authority",
+            "TODO: Check if it's the authorized account"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Token mint"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryTokenAccount",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "initTreasury",
       "accounts": [
         {
@@ -49,6 +97,11 @@
           ]
         },
         {
+          "name": "solMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "depositorTokenAccount",
           "isMut": true,
           "isSigner": false,
@@ -63,6 +116,11 @@
         },
         {
           "name": "treasuryTokenAccount",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "treasurySolTokenAccount",
           "isMut": true,
           "isSigner": true
         },
@@ -110,6 +168,11 @@
           ]
         },
         {
+          "name": "solMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "depositorTokenAccount",
           "isMut": true,
           "isSigner": false,
@@ -124,6 +187,11 @@
         },
         {
           "name": "treasuryTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treasurySolTokenAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -179,6 +247,11 @@
         },
         {
           "name": "treasuryTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treasurySolTokenAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -252,6 +325,10 @@
           },
           {
             "name": "treasuryTokenAccount",
+            "type": "publicKey"
+          },
+          {
+            "name": "treasurySolTokenAccount",
             "type": "publicKey"
           },
           {
