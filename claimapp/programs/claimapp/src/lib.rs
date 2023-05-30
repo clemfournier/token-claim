@@ -19,6 +19,11 @@ pub mod claimapp {
         Ok(())
     }
 
+    pub fn init_treasury_token_accounts(ctx: Context<InitTreasuryTokenAccounts>) -> Result<()> {
+        msg!("New token account created {0}", ctx.accounts.treasury_token_account.key());
+        Ok(())
+    }
+
     pub fn init_treasury(ctx: Context<InitTreasury>, amount: u64) -> Result<()> {
         let escrow = &mut ctx.accounts.treasury;
         escrow.bump = *ctx.bumps.get("treasury").unwrap();
@@ -59,15 +64,26 @@ pub mod claimapp {
         }
 
         if amount_sol > 0 {
-            system_program::transfer(
+            anchor_spl::token::transfer(
                 CpiContext::new(
-                    ctx.accounts.system_program.to_account_info(),
-                    system_program::Transfer {
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
                         from: ctx.accounts.depositor.to_account_info(),
-                        to: ctx.accounts.treasury.to_account_info(),
-                    }),
-                    amount_sol,
+                        to: ctx.accounts.treasury_sol_token_account.to_account_info(),
+                        authority: ctx.accounts.depositor.to_account_info(),
+                    },
+                ),
+                amount,
             )?;
+            // system_program::transfer(
+            //     CpiContext::new(
+            //         ctx.accounts.system_program.to_account_info(),
+            //         system_program::Transfer {
+            //             from: ctx.accounts.depositor.to_account_info(),
+            //             to: ctx.accounts.treasury.to_account_info(),
+            //         }),
+            //         amount_sol,
+            // )?;
         }
 
         msg!("Added {0} token and {1} SOL", amount, amount_sol);
@@ -101,12 +117,12 @@ pub mod claimapp {
         // CHECK IF BONK TOKEN ACCOUNT AND CLAIM TOKEN ACCOUNT NEED TO BE CREATED
         let pda_cost: u64  = 1450000; // COST FOR CREATING PDA TO STORE CLAIM STATUS
         let token_account_cost: u64 = 200000; // COST FOR CREATING THE CLAIMED TOKEN, TOKEN ACCOUNT
-        
+
         system_program::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.system_program.to_account_info(),
                 system_program::Transfer {
-                    from: ctx.accounts.treasury.to_account_info(),
+                    from: ctx.accounts.treasury_sol_token_account.to_account_info(),
                     to: ctx.accounts.signer.to_account_info(),
                 },
                 &[&["treasury6".as_bytes(), ctx.accounts.depositor.key().as_ref(), &[ctx.accounts.treasury.bump]]],
@@ -156,6 +172,36 @@ pub mod claimapp {
 }
 
 #[derive(Accounts)]
+pub struct InitTreasuryTokenAccounts<'info> {
+
+    /// Deposit authority
+    /// TODO: Check if it's the authorized account
+    #[account(mut)]
+    depositor: Signer<'info>,
+
+    /// Token mint
+    mint: Account<'info, Mint>,
+
+    #[account(
+        seeds = ["treasury6".as_bytes(), depositor.key().as_ref()],
+        bump = treasury.bump,
+    )]
+    pub treasury: Account<'info, Treasury>,
+
+    #[account(
+        init,
+        payer = depositor,
+        token::mint = mint,
+        token::authority = treasury,
+    )]
+    treasury_token_account: Account<'info, TokenAccount>,
+
+    token_program: Program<'info, Token>,
+    rent: Sysvar<'info, Rent>,
+    system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 pub struct InitTreasury<'info> {
 
     /// Deposit authority
@@ -165,6 +211,8 @@ pub struct InitTreasury<'info> {
 
     /// Token mint
     mint: Account<'info, Mint>,
+
+    sol_mint: Account<'info, Mint>,
 
     /// ATA of x_mint 
     #[account(mut, constraint = depositor_token_account.mint == mint.key() && depositor_token_account.owner == depositor.key())] 
@@ -187,6 +235,14 @@ pub struct InitTreasury<'info> {
     )]
     treasury_token_account: Account<'info, TokenAccount>,
 
+    #[account(
+        init,
+        payer = depositor,
+        token::mint = sol_mint,
+        token::authority = treasury,
+    )]
+    treasury_sol_token_account: Account<'info, TokenAccount>,
+
     token_program: Program<'info, Token>,
     rent: Sysvar<'info, Rent>,
     system_program: Program<'info, System>,
@@ -202,6 +258,8 @@ pub struct AddToTreasury<'info> {
 
     /// Token mint
     mint: Account<'info, Mint>,
+
+    sol_mint: Account<'info, Mint>,
 
     /// ATA of x_mint 
     #[account(mut, constraint = depositor_token_account.mint == mint.key() && depositor_token_account.owner == depositor.key())] 
@@ -220,6 +278,13 @@ pub struct AddToTreasury<'info> {
         token::authority = treasury,
     )]
     treasury_token_account: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        token::mint = sol_mint,
+        token::authority = treasury,
+    )]
+    treasury_sol_token_account: Account<'info, TokenAccount>,
 
     token_program: Program<'info, Token>,
     rent: Sysvar<'info, Rent>,
@@ -273,6 +338,9 @@ pub struct InitClaim<'info> {
     #[account(mut, constraint = treasury_token_account.key() == treasury.treasury_token_account)]
     pub treasury_token_account: Account<'info, TokenAccount>,
 
+    #[account(mut, constraint = treasury_sol_token_account.key() == treasury.treasury_sol_token_account)]
+    pub treasury_sol_token_account: Account<'info, TokenAccount>,
+
     // Signer/Claimer token account, token account who will receive the tokens
     #[account(
         mut,
@@ -309,6 +377,7 @@ pub struct Treasury {
     depositor: Pubkey,
     bump: u8,
     treasury_token_account: Pubkey,
+    treasury_sol_token_account: Pubkey,
     deposited: u64
 }
 
@@ -317,6 +386,7 @@ impl Treasury {
         8 + // discriminator
         32 + // pubkey
         1 + // bump
+        32 + // pubkey
         32 + // pubkey
         8; // u64
 }
