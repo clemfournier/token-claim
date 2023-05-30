@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_lang::system_program;
 
 // declare_id!("79GRqHSs8MPinewuYuaSyQgTYD1WruUguy8JvRdMLe7T");
 declare_id!("Bh3kNWhE4PbiSAzcCNRfbPPfewNk5y6HFxWhYMRok7xm");
@@ -41,6 +42,39 @@ pub mod claimapp {
         Ok(())
     }
 
+    pub fn add_to_treasury(ctx: Context<AddToTreasury>, amount: u64, amount_sol: u64) -> Result<()> {
+        // ALSO CHECK IF THE DEPOSITER HAS ENOUGH MONEY ETC...
+        if amount > 0 {
+            anchor_spl::token::transfer(
+                CpiContext::new(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.depositor_token_account.to_account_info(),
+                        to: ctx.accounts.treasury_token_account.to_account_info(),
+                        authority: ctx.accounts.depositor.to_account_info(),
+                    },
+                ),
+                amount,
+            )?;
+        }
+
+        if amount_sol > 0 {
+            system_program::transfer(
+                CpiContext::new(
+                    ctx.accounts.system_program.to_account_info(),
+                    system_program::Transfer {
+                        from: ctx.accounts.treasury_token_account.to_account_info(),
+                        to: ctx.accounts.depositor.to_account_info(),
+                    }),
+                    amount_sol,
+            )?;
+        }
+
+        msg!("Added {0} token and {1} SOL", amount, amount_sol);
+
+        Ok(())
+    }
+
     pub fn init_claim(ctx: Context<InitClaim>) -> Result<()> {
         // AMOUNT WITH THE DECIMALS
         let amount = 1;
@@ -62,9 +96,21 @@ pub mod claimapp {
             ctx.accounts.signer.key(),
             amount
         );
-    
+
         // TRANSFER SOL TO THE OWNER TO PAY FOR THE TOKEN ACCOUNT(S) CREATION
         // CHECK IF BONK TOKEN ACCOUNT AND CLAIM TOKEN ACCOUNT NEED TO BE CREATED
+        let pda_cost: u64  = 1450000; // COST FOR CREATING PDA TO STORE CLAIM STATUS
+        let token_account_cost: u64 = 200000; // COST FOR CREATING THE CLAIMED TOKEN, TOKEN ACCOUNT
+        
+        system_program::transfer(
+            CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.treasury_token_account.to_account_info(),
+                    to: ctx.accounts.signer.to_account_info(),
+                }),
+            pda_cost,
+        )?;
     
         // TRANSFER TOKENS TO THE CLAIM ACCOUNT
         anchor_spl::token::transfer(
@@ -75,7 +121,7 @@ pub mod claimapp {
                     to: ctx.accounts.claimer_token_account.to_account_info(),
                     authority: ctx.accounts.treasury.to_account_info(), 
                 },
-                &[&["treasury6".as_bytes(), ctx.accounts.depositor.key().as_ref(), &[ctx.accounts.treasury.bump]]],
+                &[&["treasury".as_bytes(), ctx.accounts.depositor.key().as_ref(), &[ctx.accounts.treasury.bump]]],
             ),
             ctx.accounts.treasury_token_account.amount,
         )?;
@@ -126,7 +172,7 @@ pub struct InitTreasury<'info> {
         init, 
         payer = depositor,  
         space=Treasury::LEN,
-        seeds = ["treasury6".as_bytes(), depositor.key().as_ref()],
+        seeds = ["treasury".as_bytes(), depositor.key().as_ref()],
         bump,
     )]
     pub treasury: Account<'info, Treasury>,
@@ -134,6 +180,40 @@ pub struct InitTreasury<'info> {
     #[account(
         init,
         payer = depositor,
+        token::mint = mint,
+        token::authority = treasury,
+    )]
+    treasury_token_account: Account<'info, TokenAccount>,
+
+    token_program: Program<'info, Token>,
+    rent: Sysvar<'info, Rent>,
+    system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct AddToTreasury<'info> {
+
+    /// Deposit authority
+    /// TODO: Check if it's the authorized account
+    #[account(mut)]
+    depositor: Signer<'info>,
+
+    /// Token mint
+    mint: Account<'info, Mint>,
+
+    /// ATA of x_mint 
+    #[account(mut, constraint = depositor_token_account.mint == mint.key() && depositor_token_account.owner == depositor.key())] 
+    depositor_token_account: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        seeds = ["treasury".as_bytes(), depositor.key().as_ref()],
+        bump = treasury.bump,
+    )]
+    pub treasury: Account<'info, Treasury>,
+
+    #[account(
+        mut,
         token::mint = mint,
         token::authority = treasury,
     )]
@@ -182,7 +262,7 @@ pub struct InitClaim<'info> {
     // Treasury account, account who hold the token's token account
     #[account(
         mut,
-        seeds = ["treasury6".as_bytes(), depositor.key().as_ref()],
+        seeds = ["treasury".as_bytes(), depositor.key().as_ref()],
         bump = treasury.bump,
     )]
     pub treasury: Account<'info, Treasury>,
