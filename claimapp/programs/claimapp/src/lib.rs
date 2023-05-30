@@ -99,18 +99,18 @@ pub mod claimapp {
 
         // TRANSFER SOL TO THE OWNER TO PAY FOR THE TOKEN ACCOUNT(S) CREATION
         // CHECK IF BONK TOKEN ACCOUNT AND CLAIM TOKEN ACCOUNT NEED TO BE CREATED
-        // let pda_cost: u64  = 1450000; // COST FOR CREATING PDA TO STORE CLAIM STATUS
-        // let token_account_cost: u64 = 200000; // COST FOR CREATING THE CLAIMED TOKEN, TOKEN ACCOUNT
+        let pda_cost: u64  = 1450000; // COST FOR CREATING PDA TO STORE CLAIM STATUS
+        let token_account_cost: u64 = 200000; // COST FOR CREATING THE CLAIMED TOKEN, TOKEN ACCOUNT
         
-        // system_program::transfer(
-        //     CpiContext::new(
-        //         ctx.accounts.system_program.to_account_info(),
-        //         system_program::Transfer {
-        //             from: ctx.accounts.treasury_token_account.to_account_info(),
-        //             to: ctx.accounts.signer.to_account_info(),
-        //         }),
-        //     pda_cost,
-        // )?;
+        system_program::transfer(
+            CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.treasury.to_account_info(),
+                    to: ctx.accounts.signer.to_account_info(),
+                }),
+            pda_cost,
+        )?;
     
         // TRANSFER TOKENS TO THE CLAIM ACCOUNT
         anchor_spl::token::transfer(
