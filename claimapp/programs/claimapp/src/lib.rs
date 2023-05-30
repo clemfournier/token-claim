@@ -207,7 +207,7 @@ pub struct AddToTreasury<'info> {
 
     #[account(
         mut,
-        seeds = ["treasury".as_bytes(), depositor.key().as_ref()],
+        seeds = ["treasury6".as_bytes(), depositor.key().as_ref()],
         bump = treasury.bump,
     )]
     pub treasury: Account<'info, Treasury>,
