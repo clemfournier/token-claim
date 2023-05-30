@@ -62,6 +62,11 @@
           "isSigner": false
         },
         {
+          "name": "solTreasury",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "treasuryTokenAccount",
           "isMut": true,
           "isSigner": true
@@ -123,6 +128,11 @@
           "isSigner": false
         },
         {
+          "name": "solTreasury",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "treasuryTokenAccount",
           "isMut": true,
           "isSigner": false
@@ -174,6 +184,11 @@
         },
         {
           "name": "treasury",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "solTreasury",
           "isMut": true,
           "isSigner": false
         },
