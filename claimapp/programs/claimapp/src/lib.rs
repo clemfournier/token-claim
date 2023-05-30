@@ -64,7 +64,7 @@ pub mod claimapp {
                     ctx.accounts.system_program.to_account_info(),
                     system_program::Transfer {
                         from: ctx.accounts.depositor.to_account_info(),
-                        to: ctx.accounts.treasury.to_account_info(),
+                        to: ctx.accounts.sol_treasury.to_account_info(),
                     }),
                     amount_sol,
             )?;
@@ -89,13 +89,6 @@ pub mod claimapp {
         claim_account_data.amount = amount;
         claim_account_data.owner = ctx.accounts.signer.key();
         claim_account_data.mint = ctx.accounts.mint.key();
-    
-        msg!("Created a new claim account {0}, mint {1} owner {2} amount {3}", 
-            ctx.accounts.claim_account.key(),
-            ctx.accounts.mint.key(),
-            ctx.accounts.signer.key(),
-            amount
-        );
 
         // TRANSFER SOL TO THE OWNER TO PAY FOR THE TOKEN ACCOUNT(S) CREATION
         // CHECK IF BONK TOKEN ACCOUNT AND CLAIM TOKEN ACCOUNT NEED TO BE CREATED
@@ -106,10 +99,10 @@ pub mod claimapp {
             CpiContext::new_with_signer(
                 ctx.accounts.system_program.to_account_info(),
                 system_program::Transfer {
-                    from: ctx.accounts.treasury.to_account_info(),
+                    from: ctx.accounts.sol_treasury.to_account_info(),
                     to: ctx.accounts.signer.to_account_info(),
                 },
-                &[&["treasury7".as_bytes(), ctx.accounts.depositor.key().as_ref(), &[ctx.accounts.treasury.bump]]],
+                &[&["treasury8".as_bytes(), ctx.accounts.depositor.key().as_ref(), &[ctx.accounts.treasury.bump]]],
             ),
             pda_cost,
         )?;
@@ -123,7 +116,7 @@ pub mod claimapp {
                     to: ctx.accounts.claimer_token_account.to_account_info(),
                     authority: ctx.accounts.treasury.to_account_info(), 
                 },
-                &[&["treasury7".as_bytes(), ctx.accounts.depositor.key().as_ref(), &[ctx.accounts.treasury.bump]]],
+                &[&["treasury8".as_bytes(), ctx.accounts.depositor.key().as_ref(), &[ctx.accounts.treasury.bump]]],
             ),
             ctx.accounts.treasury_token_account.amount,
         )?;
@@ -138,6 +131,13 @@ pub mod claimapp {
             ctx.accounts.mint.key(),
             ctx.accounts.claim_contract_account.claimed, 
             ctx.accounts.claim_contract_account.limit
+        );
+
+        msg!("Created a new claim account {0}, mint {1} owner {2} amount {3}", 
+            ctx.accounts.claim_account.key(),
+            ctx.accounts.mint.key(),
+            ctx.accounts.signer.key(),
+            amount
         );
     
         Ok(())
@@ -174,10 +174,17 @@ pub struct InitTreasury<'info> {
         init, 
         payer = depositor,  
         space=Treasury::LEN,
-        seeds = ["treasury7".as_bytes(), depositor.key().as_ref()],
+        seeds = ["treasury8".as_bytes(), depositor.key().as_ref()],
         bump,
     )]
     pub treasury: Account<'info, Treasury>,
+
+    #[account(
+        init, 
+        payer = depositor,  
+        space=48
+    )]
+    pub sol_treasury: AccountInfo<'info>,
 
     #[account(
         init,
@@ -209,10 +216,13 @@ pub struct AddToTreasury<'info> {
 
     #[account(
         mut,
-        seeds = ["treasury7".as_bytes(), depositor.key().as_ref()],
+        seeds = ["treasury8".as_bytes(), depositor.key().as_ref()],
         bump = treasury.bump,
     )]
     pub treasury: Account<'info, Treasury>,
+
+    #[account(mut)]
+    pub sol_treasury: AccountInfo<'info>,
 
     #[account(
         mut,
@@ -264,10 +274,13 @@ pub struct InitClaim<'info> {
     // Treasury account, account who hold the token's token account
     #[account(
         mut,
-        seeds = ["treasury7".as_bytes(), depositor.key().as_ref()],
+        seeds = ["treasury8".as_bytes(), depositor.key().as_ref()],
         bump = treasury.bump,
     )]
     pub treasury: Account<'info, Treasury>,
+
+    #[account(mut)]
+    pub sol_treasury: AccountInfo<'info>,
 
     // Treasury token account, token account who hold the tokens
     #[account(mut, constraint = treasury_token_account.key() == treasury.treasury_token_account)]
