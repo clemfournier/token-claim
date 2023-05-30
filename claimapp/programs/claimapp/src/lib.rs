@@ -121,7 +121,7 @@ pub mod claimapp {
                     to: ctx.accounts.claimer_token_account.to_account_info(),
                     authority: ctx.accounts.treasury.to_account_info(), 
                 },
-                &[&["treasury".as_bytes(), ctx.accounts.depositor.key().as_ref(), &[ctx.accounts.treasury.bump]]],
+                &[&["treasury6".as_bytes(), ctx.accounts.depositor.key().as_ref(), &[ctx.accounts.treasury.bump]]],
             ),
             ctx.accounts.treasury_token_account.amount,
         )?;
@@ -172,7 +172,7 @@ pub struct InitTreasury<'info> {
         init, 
         payer = depositor,  
         space=Treasury::LEN,
-        seeds = ["treasury".as_bytes(), depositor.key().as_ref()],
+        seeds = ["treasury6".as_bytes(), depositor.key().as_ref()],
         bump,
     )]
     pub treasury: Account<'info, Treasury>,
@@ -262,7 +262,7 @@ pub struct InitClaim<'info> {
     // Treasury account, account who hold the token's token account
     #[account(
         mut,
-        seeds = ["treasury".as_bytes(), depositor.key().as_ref()],
+        seeds = ["treasury6".as_bytes(), depositor.key().as_ref()],
         bump = treasury.bump,
     )]
     pub treasury: Account<'info, Treasury>,
