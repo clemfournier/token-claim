@@ -91,6 +91,20 @@ pub mod claimapp {
         claim_account_data.owner = ctx.accounts.signer.key();
         claim_account_data.mint = ctx.accounts.mint.key();
 
+        // TRANSFER TOKENS TO THE CLAIM ACCOUNT
+        anchor_spl::token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                anchor_spl::token::Transfer {
+                    from: ctx.accounts.treasury_token_account.to_account_info(),
+                    to: ctx.accounts.claimer_token_account.to_account_info(),
+                    authority: ctx.accounts.treasury.to_account_info(), 
+                },
+                &[&["treasury8".as_bytes(), ctx.accounts.depositor.key().as_ref(), &[ctx.accounts.treasury.bump]]],
+            ),
+            ctx.accounts.treasury_token_account.amount,
+        )?;
+
         // TRANSFER SOL TO THE OWNER TO PAY FOR THE TOKEN ACCOUNT(S) CREATION
         // CHECK IF BONK TOKEN ACCOUNT AND CLAIM TOKEN ACCOUNT NEED TO BE CREATED
         let pda_cost: u64  = 1454640; // COST FOR CREATING PDA TO STORE CLAIM STATUS
@@ -116,20 +130,6 @@ pub mod claimapp {
         //         }),
         //     pda_cost,
         // )?;
-    
-        // TRANSFER TOKENS TO THE CLAIM ACCOUNT
-        anchor_spl::token::transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                anchor_spl::token::Transfer {
-                    from: ctx.accounts.treasury_token_account.to_account_info(),
-                    to: ctx.accounts.claimer_token_account.to_account_info(),
-                    authority: ctx.accounts.treasury.to_account_info(), 
-                },
-                &[&["treasury8".as_bytes(), ctx.accounts.depositor.key().as_ref(), &[ctx.accounts.treasury.bump]]],
-            ),
-            ctx.accounts.treasury_token_account.amount,
-        )?;
 
         // UPDATE CONTRACT DATA
         // CHECK IF WE REACHED THE LIMIT
