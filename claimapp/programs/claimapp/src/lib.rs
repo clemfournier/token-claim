@@ -222,6 +222,7 @@ pub struct AddToTreasury<'info> {
     pub treasury: Account<'info, Treasury>,
 
     #[account(mut)]
+    /// CHECK:
     pub sol_treasury: AccountInfo<'info>,
 
     #[account(
@@ -280,6 +281,7 @@ pub struct InitClaim<'info> {
     pub treasury: Account<'info, Treasury>,
 
     #[account(mut)]
+    /// CHECK:
     pub sol_treasury: AccountInfo<'info>,
 
     // Treasury token account, token account who hold the tokens
