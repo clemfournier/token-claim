@@ -184,6 +184,7 @@ pub struct InitTreasury<'info> {
         payer = depositor,  
         space=48
     )]
+    /// CHECK:
     pub sol_treasury: AccountInfo<'info>,
 
     #[account(
