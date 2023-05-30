@@ -64,7 +64,8 @@ pub mod claimapp {
                     ctx.accounts.system_program.to_account_info(),
                     system_program::Transfer {
                         from: ctx.accounts.depositor.to_account_info(),
-                        to: ctx.accounts.sol_treasury.to_account_info(),
+                        to: ctx.accounts.treasury.to_account_info(),
+                        //to: ctx.accounts.sol_treasury.to_account_info(),
                     }),
                     amount_sol,
             )?;
@@ -92,10 +93,11 @@ pub mod claimapp {
 
         // TRANSFER SOL TO THE OWNER TO PAY FOR THE TOKEN ACCOUNT(S) CREATION
         // CHECK IF BONK TOKEN ACCOUNT AND CLAIM TOKEN ACCOUNT NEED TO BE CREATED
-        let pda_cost: u64  = 1450000; // COST FOR CREATING PDA TO STORE CLAIM STATUS
+        let pda_cost: u64  = 1454640; // COST FOR CREATING PDA TO STORE CLAIM STATUS
         let token_account_cost: u64 = 200000; // COST FOR CREATING THE CLAIMED TOKEN, TOKEN ACCOUNT
 
-        let vault_account_info: &mut AccountInfo = &mut ctx.accounts.sol_treasury.to_account_info();
+        let vault_account_info: &mut AccountInfo = &mut ctx.accounts.treasury.to_account_info();
+        //let vault_account_info: &mut AccountInfo = &mut ctx.accounts.sol_treasury.to_account_info();
         let owner_account_info: &mut AccountInfo = &mut ctx.accounts.signer.to_account_info();
 
         // MAKE VERIFICATION WITH THAT 
