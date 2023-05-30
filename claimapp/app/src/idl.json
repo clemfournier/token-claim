@@ -90,6 +90,71 @@
       ]
     },
     {
+      "name": "addToTreasury",
+      "accounts": [
+        {
+          "name": "depositor",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "Deposit authority",
+            "TODO: Check if it's the authorized account"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Token mint"
+          ]
+        },
+        {
+          "name": "depositorTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "ATA of x_mint"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "amountSol",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "initClaim",
       "accounts": [
         {
