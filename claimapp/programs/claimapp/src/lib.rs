@@ -96,14 +96,12 @@ pub mod claimapp {
         let token_account_cost: u64 = 200000; // COST FOR CREATING THE CLAIMED TOKEN, TOKEN ACCOUNT
         
         system_program::transfer(
-            CpiContext::new_with_signer(
+            CpiContext::new(
                 ctx.accounts.system_program.to_account_info(),
                 system_program::Transfer {
                     from: ctx.accounts.sol_treasury.to_account_info(),
                     to: ctx.accounts.signer.to_account_info(),
-                },
-                &[&["treasury8".as_bytes(), ctx.accounts.depositor.key().as_ref(), &[ctx.accounts.treasury.bump]]],
-            ),
+                }),
             pda_cost,
         )?;
     
