@@ -6,7 +6,7 @@
       "name": "initContract",
       "accounts": [
         {
-          "name": "claimContractAccount",
+          "name": "claimContract",
           "isMut": true,
           "isSigner": false
         },
@@ -186,7 +186,7 @@
           "isSigner": false
         },
         {
-          "name": "claimContractAccount",
+          "name": "claimContract",
           "isMut": true,
           "isSigner": false
         },
