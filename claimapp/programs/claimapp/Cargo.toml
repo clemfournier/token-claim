@@ -19,4 +19,4 @@ default = []
 anchor-lang = { git = "https://github.com/coral-xyz/anchor" }
 anchor-spl = { git = "https://github.com/coral-xyz/anchor" }
 solana-program = "*"
-mpl-token-metadata = { git = "https://github.com/metaplex-foundation/metaplex-program-library" }
+mpl-token-metadata = { version="1.12.0", features = [ "no-entrypoint" ] }
