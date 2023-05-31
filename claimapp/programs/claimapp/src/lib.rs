@@ -10,7 +10,7 @@ declare_id!("6YF6WkHwsNwssuXWBi1BktqgpC27QyoJw9cd3VDrobZi");
 pub mod claimapp {
     use super::*;
 
-    pub const OWNERS: Vec<Pubkey> = vec![pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz"), pubkey!("FZ5FgLRom1Xv9dUGxTTJX5tU5We6BgyWXw3GytWaU7op")];
+    pub const OWNERS: &[Pubkey] = &[pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz"), pubkey!("FZ5FgLRom1Xv9dUGxTTJX5tU5We6BgyWXw3GytWaU7op")];
 
     pub const OWNER1: Pubkey = pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz");
     pub const OWNER2: Pubkey = pubkey!("FZ5FgLRom1Xv9dUGxTTJX5tU5We6BgyWXw3GytWaU7op");
