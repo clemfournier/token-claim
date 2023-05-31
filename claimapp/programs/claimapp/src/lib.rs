@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use anchor_lang::system_program;
+use solana_program::{pubkey, pubkey::Pubkey};
 
 declare_id!("6YF6WkHwsNwssuXWBi1BktqgpC27QyoJw9cd3VDrobZi");
 // declare_id!("Bh3kNWhE4PbiSAzcCNRfbPPfewNk5y6HFxWhYMRok7xm");
@@ -8,6 +9,8 @@ declare_id!("6YF6WkHwsNwssuXWBi1BktqgpC27QyoJw9cd3VDrobZi");
 #[program]
 pub mod claimapp {
     use super::*;
+
+    pub const OWNER: Pubkey = pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz");
 
     pub fn init_contract(ctx: Context<InitContract>, limit: u64) -> Result<()> {
         ctx.accounts.claim_contract_account.is_active = true;
@@ -170,7 +173,7 @@ pub struct InitTreasury<'info> {
 
     /// Deposit authority
     /// TODO: Check if it's the authorized account
-    #[account(mut)]
+    #[account(mut, constraint = depositor.key() == OWNER.key())]
     depositor: Signer<'info>,
 
     /// Token mint
