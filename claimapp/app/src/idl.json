@@ -8,7 +8,7 @@
         {
           "name": "claimContractAccount",
           "isMut": true,
-          "isSigner": true
+          "isSigner": false
         },
         {
           "name": "signer",
@@ -36,8 +36,7 @@
           "isMut": true,
           "isSigner": true,
           "docs": [
-            "Deposit authority",
-            "TODO: Check if it's the authorized account"
+            "Deposit authority"
           ]
         },
         {
@@ -102,8 +101,7 @@
           "isMut": true,
           "isSigner": true,
           "docs": [
-            "Deposit authority",
-            "TODO: Check if it's the authorized account"
+            "Deposit authority"
           ]
         },
         {
@@ -124,11 +122,6 @@
         },
         {
           "name": "treasury",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "solTreasury",
           "isMut": true,
           "isSigner": false
         },
@@ -173,22 +166,12 @@
           "isSigner": true
         },
         {
-          "name": "depositor",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "claimAccount",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "treasury",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "solTreasury",
           "isMut": true,
           "isSigner": false
         },
@@ -281,6 +264,10 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
           {
             "name": "isActive",
             "type": "bool"
