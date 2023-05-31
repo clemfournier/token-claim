@@ -10,7 +10,10 @@ declare_id!("6YF6WkHwsNwssuXWBi1BktqgpC27QyoJw9cd3VDrobZi");
 pub mod claimapp {
     use super::*;
 
-    pub const OWNER: Pubkey = pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz");
+    pub const OWNERS: Vec<Pubkey> = vec![pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz"), pubkey!("FZ5FgLRom1Xv9dUGxTTJX5tU5We6BgyWXw3GytWaU7op")];
+
+    pub const OWNER1: Pubkey = pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz");
+    pub const OWNER2: Pubkey = pubkey!("FZ5FgLRom1Xv9dUGxTTJX5tU5We6BgyWXw3GytWaU7op");
 
     pub fn init_contract(ctx: Context<InitContract>, limit: u64) -> Result<()> {
         ctx.accounts.claim_contract_account.is_active = true;
@@ -173,7 +176,7 @@ pub struct InitTreasury<'info> {
 
     /// Deposit authority
     /// TODO: Check if it's the authorized account
-    #[account(mut, constraint = depositor.key() == OWNER.key())]
+    #[account(mut, constraint = OWNERS.contains(&depositor.key()))]
     depositor: Signer<'info>,
 
     /// Token mint
