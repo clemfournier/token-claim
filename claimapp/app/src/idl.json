@@ -101,7 +101,7 @@
           "isMut": true,
           "isSigner": true,
           "docs": [
-            "Deposit authority"
+            "Deposit authority, owner only"
           ]
         },
         {
@@ -188,6 +188,11 @@
         {
           "name": "claimContract",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftTokenAccount",
+          "isMut": false,
           "isSigner": false
         },
         {
