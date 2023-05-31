@@ -19,3 +19,4 @@ default = []
 anchor-lang = { git = "https://github.com/coral-xyz/anchor" }
 anchor-spl = { git = "https://github.com/coral-xyz/anchor" }
 solana-program = "*"
+mpl-token-metadata = "1.12.0"

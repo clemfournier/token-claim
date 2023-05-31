@@ -2,6 +2,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use anchor_lang::system_program;
 use solana_program::{pubkey, pubkey::Pubkey};
+use mpl_token_metadata;
+use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
 
 declare_id!("6YF6WkHwsNwssuXWBi1BktqgpC27QyoJw9cd3VDrobZi");
 // declare_id!("Bh3kNWhE4PbiSAzcCNRfbPPfewNk5y6HFxWhYMRok7xm");
@@ -104,6 +106,22 @@ pub mod claimapp {
         // CHECK IF THE CLAIMER IS THE OWNER OF THE NFT
         // CHECK IF THE CLAIMER DIDNT ALREADY CLAIMED
         // CHECK IF DIDNT REACH THE MAX CLAIMERS
+        let (metadata, _) = Pubkey::find_program_address(
+            &[
+                mpl_token_metadata::state::PREFIX.as_bytes(),
+                mpl_token_metadata::id().as_ref(),
+                ctx.accounts.mint.key().as_ref(),
+            ],
+            &mpl_token_metadata::id(),
+        );
+
+        msg!("Metadata: {0}", metadata.key());
+
+        if 1 == 1 {
+            return Ok(())
+        }
+
+        // let mint_metadata= Metadata::from_account_info(metadata.as_ref().to_account_info())?; 
     
         // CREATING THE CLAIM TOKEN ACCOUNT
         let claim_account_data = &mut ctx.accounts.claim_account;
@@ -329,7 +347,6 @@ pub struct InitClaim<'info> {
     pub claim_contract: Account<'info, Contract>,
 
     #[account(
-        mut,
         constraint = mint.key() == nft_token_account.mint,
         // OWNER VERIFICATION, REMOVE LATER
         // constraint = nft_token_account.owner == signer.key(),
@@ -339,9 +356,7 @@ pub struct InitClaim<'info> {
 
     // NFT mint of the owner
     // Might have some more verifications here
-    #[account(
-        token::authority = NFT_UPDATE_AUTHORITY
-    )]
+    #[account()]
     pub mint: Account<'info, Mint>,
 
     token_program: Program<'info, Token>,
