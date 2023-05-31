@@ -38,10 +38,13 @@ const App = () => {
     try {
       setLoading(true)
       const { solana } = window;
+      console.log('solana', solana);
+
       if (solana) {
+        console.log("solana object found", solana.isPhantom);
         if (solana.isPhantom) {
           const response = await solana.connect({
-            onlyIfTrusted: true, //second time if anyone connected it won't show anypop on screen
+            onlyIfTrusted: false, //second time if anyone connected it won't show anypop on screen
           });
           setWalletAddress(response.publicKey.toString());
         }
@@ -85,33 +88,6 @@ const App = () => {
     );
   };
 
-  const initClaim = async() => {
-    try {
-      const provider = getProvider();
-      const program = new Program(idl,programID,provider);
-      const signer = new PublicKey(walletaddress);
-      let escrow;
-      [escrow] = await anchor.web3.PublicKey.findProgramAddress([
-        anchor.utils.bytes.utf8.encode("claim"),
-        signer.toBuffer()
-      ], 
-      program.programId);
-      console.log('claimAccount', escrow.toString(), 'signer', signer.toString());
-      const limit = new anchor.BN(10);
-      const tx = await program.methods.initContract(limit)
-      .accounts({
-        claimAccount: escrow,
-        signer,
-        systemProgram: anchor.web3.SystemProgram.programId
-      })
-      .rpc({skipPreflight: true});
-
-      console.log("TxSig :: ", tx);
-    } catch (error) {
-      console.log(error.message);
-    }
-  }
-
   const initContract = async() => {
     try {
       const provider = getProvider();
@@ -144,12 +120,16 @@ const App = () => {
     try {
       const provider = getProvider();
       const program = new Program(idl,programID,provider);
+      console.log('walletaddress', walletaddress);
+      
       const signer = new PublicKey(walletaddress);
-      const depositor = new PublicKey('EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz')
+
+      const depositor = new PublicKey('EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz');
+      const solTreasury = new PublicKey('2zhEsufiMW4Vpy5rugFHDLtVUYyC1Lt7cAJ266jHaeDx');
 
       let treasury;
       [treasury] = await anchor.web3.PublicKey.findProgramAddress([
-        anchor.utils.bytes.utf8.encode("treasury6"),
+        anchor.utils.bytes.utf8.encode("treasury8"),
         depositor.toBuffer()
       ], 
       program.programId);
@@ -167,8 +147,9 @@ const App = () => {
         depositor,
         claimAccount: escrow,
         treasury, //: new PublicKey('BqZUhaHrdBxyX8Rkqva5cmQb8nuoZztaRzpRmDZFpNt5'),
-        treasuryTokenAccount: new PublicKey('6NDDmYTC4fwJzh17Bg2dRC3WkbN2fEySc1Rkr3CLKD1F'),
-        claimerTokenAccount: new PublicKey('7vWSysD7pJomzXUK42PNoEL4cbk2LsTk3XihT8PSVBED'),
+        solTreasury, //: new PublicKey('BqZUhaHrdBxyX8Rkqva5cmQb8nuoZztaRzpRmDZFpNt5'),
+        treasuryTokenAccount: new PublicKey('V6PENuHFPBo1U2rURFG1MEdLRMAzBp9ysVjzCTUCSZw'),
+        claimerTokenAccount: new PublicKey('DVN6VeweRmS3k1pG9oiLgduSk39hpfk2kzapjnUqeTLC'),
         claimContractAccount: new PublicKey('HAXXnSBEgR5fkLNkTsPSNHpnfvqYZRTFwErH62Jx5tK4'),
         mint: new PublicKey('FUXjAEefwYaaoBAMq2Nx4wb4TwYxNmKox8JNWHKuwjWv'),
         tokenProgram: splToken.TOKEN_PROGRAM_ID,
@@ -192,16 +173,17 @@ const App = () => {
       let mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
       let depositor_token_account = new PublicKey('6Sta9fu8asbk2qoGj3PXeVLxXTeJD6UvJb6WGkcbV1Kz');
       let treasuryTokenAccount = anchor.web3.Keypair.generate();
+      let solTreasury = anchor.web3.Keypair.generate();
 
       console.log('treasury token account', treasuryTokenAccount.publicKey.toString())
 
       let escrow;
       [escrow] = await anchor.web3.PublicKey.findProgramAddress([
-        anchor.utils.bytes.utf8.encode("treasury6"),
+        anchor.utils.bytes.utf8.encode("treasury8"),
         depositor.toBuffer()
       ], 
       program.programId);
-      const amount = new anchor.BN(10);
+      const amount = new anchor.BN(100000000);
       
       const tx = await program.methods.initTreasury(amount)
         .accounts({
@@ -209,12 +191,54 @@ const App = () => {
           mint,
           depositorTokenAccount: depositor_token_account,
           treasury: escrow,
+          solTreasury: solTreasury.publicKey,
           treasuryTokenAccount: treasuryTokenAccount.publicKey,
           tokenProgram: splToken.TOKEN_PROGRAM_ID,
           rent: SYSVAR_RENT_PUBKEY,
           systemProgram: anchor.web3.SystemProgram.programId
         })
-        .signers([treasuryTokenAccount])
+        .signers([treasuryTokenAccount, solTreasury])
+        .rpc({skipPreflight: true})
+  
+      console.log("TxSig :: ", tx);
+    }catch(err){
+      console.log(err)
+    }
+  }
+
+  const addToTreasury = async() => {
+    const provider = getProvider();
+    const program = new Program(idl,programID,provider);
+
+    try{
+      console.log('depositor' , walletaddress);
+      let depositor = new PublicKey(walletaddress);
+      let mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
+      let depositor_token_account = new PublicKey('6Sta9fu8asbk2qoGj3PXeVLxXTeJD6UvJb6WGkcbV1Kz');
+      let treasuryTokenAccount = new PublicKey('V6PENuHFPBo1U2rURFG1MEdLRMAzBp9ysVjzCTUCSZw');
+      let solTreasury = new PublicKey('2zhEsufiMW4Vpy5rugFHDLtVUYyC1Lt7cAJ266jHaeDx');
+      let treasury;
+      [treasury] = await anchor.web3.PublicKey.findProgramAddress([
+        anchor.utils.bytes.utf8.encode("treasury8"),
+        depositor.toBuffer()
+      ], 
+      program.programId);
+      
+      const amount = new anchor.BN(100000000);
+      const sol_amount = new anchor.BN(100000000);
+      
+      const tx = await program.methods.addToTreasury(amount, sol_amount)
+        .accounts({
+          depositor,
+          mint,
+          depositorTokenAccount: depositor_token_account,
+          treasury,
+          solTreasury,
+          treasuryTokenAccount: treasuryTokenAccount,
+          tokenProgram: splToken.TOKEN_PROGRAM_ID,
+          rent: SYSVAR_RENT_PUBKEY,
+          systemProgram: anchor.web3.SystemProgram.programId
+        })
         .rpc({skipPreflight: true})
   
       console.log("TxSig :: ", tx);
@@ -233,6 +257,9 @@ const App = () => {
       </div>
       <div>
         <a style={{color: 'white'}} onClick={() => initContract()}>INIT CONTRACT</a>
+      </div>
+      <div>
+        <a style={{color: 'white'}} onClick={() => addToTreasury()}>ADD TO TREASURY</a>
       </div>
     </div>
   );
