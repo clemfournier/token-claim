@@ -196,6 +196,11 @@
           "isSigner": false
         },
         {
+          "name": "nftMetadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "mint",
           "isMut": false,
           "isSigner": false
