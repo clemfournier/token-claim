@@ -14,7 +14,7 @@ pub mod claimapp {
     pub const TREASURY: &[u8] = b"treasury8";
     pub const CONTRACT: &[u8] = b"contract8";
     pub const CLAIM: &[u8] = b"claim8";
-    pub const TOKEN_MINT: &Pubkey = &pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz");
+    pub const TOKEN_MINT: &Pubkey = &pubkey!("CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US");
     pub const NFT_UPDATE_AUTHORITY: &Pubkey = &pubkey!("En54STTsmVrWA3Cd43SQNgiLrihRDG2iMJD6zWPHjYfW");
     pub const OWNERS: &[Pubkey] = &[
         pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz"),
@@ -330,7 +330,9 @@ pub struct InitClaim<'info> {
 
     // NFT mint of the owner
     // Might have some more verifications here
-    #[account(mint::authority = NFT_UPDATE_AUTHORITY)]
+    #[account(
+        mint::authority = NFT_UPDATE_AUTHORITY
+    )]
     pub mint: Account<'info, Mint>,
 
     token_program: Program<'info, Token>,
