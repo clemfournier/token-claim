@@ -118,6 +118,8 @@ pub mod claimapp {
         let mint_metadata= Metadata::from_account_info(&ctx.accounts.nft_metadata.to_account_info())?; 
 
         msg!("Metadata retrived: {0}, metadata sent: {1}", metadata.key(), ctx.accounts.nft_metadata.key());
+        msg!("Metadata update auth: {0}", mint_metadata.update_authority.key());
+        msg!("Metadata mint: {0}", mint_metadata.mint.key());
 
         if mint_metadata.collection.is_some() {
             let collection = mint_metadata.collection.unwrap();
