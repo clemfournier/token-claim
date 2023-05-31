@@ -4,8 +4,7 @@ import * as anchor from "@project-serum/anchor";
 import {Buffer} from 'buffer';
 import idl from './idl.json' //get the smartcontract data structure model from target folder in anchor rust
 import { Connection, PublicKey, clusterApiUrl, SYSVAR_RENT_PUBKEY } from '@solana/web3.js';
-import { Program, AnchorProvider, web3, utils } from '@project-serum/anchor';
-import { FeedPostDesign } from './FeedPostDesign';
+import { Program, AnchorProvider } from '@project-serum/anchor';
 import * as splToken from "@solana/spl-token";
 
 
@@ -15,11 +14,15 @@ const network = clusterApiUrl("devnet")
 const opts = {
   preflightCommitment:"processed",
 }
-
+const depositor = new PublicKey('EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz');
+const claimContractAccount = new PublicKey('AooKy14uWdPQbQHSPd3oEZ4epK4ism6NYfxiBjYpPB7Y');
+const mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
+const treasuryId = 'treasury8';
+const contractId = 'contract8';
+const claimId = 'claim8';
 
 const App = () => {
   const [Loading, setLoading] = useState(false)
-  const [datas,setData] = useState([])
   const [walletaddress, setWalletAddress] = useState("");
   
   const { solana } = window;
@@ -93,21 +96,20 @@ const App = () => {
       const provider = getProvider();
       const program = new Program(idl,programID,provider);
       const signer = new PublicKey(walletaddress);
-      let escrow = anchor.web3.Keypair.generate();
-      // [escrow] = await anchor.web3.PublicKey.findProgramAddress([
-      //   anchor.utils.bytes.utf8.encode("claimcontract"),
-      //   signer.toBuffer()
-      // ], 
-      // program.programId);
-      console.log('claimContractAccount', escrow.publicKey.toString(), 'signer', signer.toString());
+      // let escrow = anchor.web3.Keypair.generate();
+      let contract;
+      [contract] = await anchor.web3.PublicKey.findProgramAddress([
+        anchor.utils.bytes.utf8.encode(contractId)
+      ], 
+      program.programId);
+      console.log('claimContract', contract.toString(), 'signer', signer.toString());
       const limit = new anchor.BN(10);
       const tx = await program.methods.initContract(limit)
       .accounts({
-        claimContractAccount: escrow.publicKey,
+        claimContract: contract,
         signer,
         systemProgram: anchor.web3.SystemProgram.programId
       })
-      .signers([escrow])
       .rpc({skipPreflight: true});
 
       console.log("TxSig :: ", tx);
@@ -124,19 +126,16 @@ const App = () => {
       
       const signer = new PublicKey(walletaddress);
 
-      const depositor = new PublicKey('EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz');
-      const solTreasury = new PublicKey('2zhEsufiMW4Vpy5rugFHDLtVUYyC1Lt7cAJ266jHaeDx');
-
       let treasury;
       [treasury] = await anchor.web3.PublicKey.findProgramAddress([
-        anchor.utils.bytes.utf8.encode("treasury8"),
-        depositor.toBuffer()
+        anchor.utils.bytes.utf8.encode(treasuryId),
+        // depositor.toBuffer()
       ], 
       program.programId);
 
       let escrow;
       [escrow] = await anchor.web3.PublicKey.findProgramAddress([
-        anchor.utils.bytes.utf8.encode("claim"),
+        anchor.utils.bytes.utf8.encode(claimId),
         signer.toBuffer()
       ], 
       program.programId);
@@ -147,11 +146,12 @@ const App = () => {
         depositor,
         claimAccount: escrow,
         treasury, //: new PublicKey('BqZUhaHrdBxyX8Rkqva5cmQb8nuoZztaRzpRmDZFpNt5'),
-        solTreasury, //: new PublicKey('BqZUhaHrdBxyX8Rkqva5cmQb8nuoZztaRzpRmDZFpNt5'),
-        treasuryTokenAccount: new PublicKey('V6PENuHFPBo1U2rURFG1MEdLRMAzBp9ysVjzCTUCSZw'),
-        claimerTokenAccount: new PublicKey('DVN6VeweRmS3k1pG9oiLgduSk39hpfk2kzapjnUqeTLC'),
-        claimContractAccount: new PublicKey('HAXXnSBEgR5fkLNkTsPSNHpnfvqYZRTFwErH62Jx5tK4'),
-        mint: new PublicKey('FUXjAEefwYaaoBAMq2Nx4wb4TwYxNmKox8JNWHKuwjWv'),
+        treasuryTokenAccount: new PublicKey('6aSGsMZobFQA8zcE5DwDvWsWLWHrdbTYCod2feBjHAmH'),
+        claimerTokenAccount: new PublicKey('CHQGqUestswvVChLC6vp3oLrZS363edUmUc674n5UrfH'),
+        claimContract: new PublicKey('458vugKTH5cqhqucfmDZiWDmMCNKhDxQucwHLwvbMdr2'),
+        nftTokenAccount: new PublicKey('Czs8q51C3jfUNY9pXFwQ61Q7uc4H18gqFjQhrBvQeHC2'),
+        nftMetadata: new PublicKey('sGHgm6DsCpG8WkhnEmNqzFDguq77xTERYr5QUtBJhpH'),
+        mint: new PublicKey('46pcSL5gmjBrPqGKFaLbbCmR6iVuLJbnQy13hAe7s6CC'),
         tokenProgram: splToken.TOKEN_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: anchor.web3.SystemProgram.programId
@@ -170,8 +170,9 @@ const App = () => {
 
     try{
       let depositor = new PublicKey(walletaddress);
-      let mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
       let depositor_token_account = new PublicKey('6Sta9fu8asbk2qoGj3PXeVLxXTeJD6UvJb6WGkcbV1Kz');
+      // let depositor_token_account = new PublicKey('6Mac2LbWjvaUJXbHZ1w3Ux7mVYUDt74vsBXVvF21wwuB');
+      // let depositor_token_account = new PublicKey('3gDPGmt2gtiqFY79ayYdtcvqQSHEXKYCWvPUQZ7ZyVfa');
       let treasuryTokenAccount = anchor.web3.Keypair.generate();
       let solTreasury = anchor.web3.Keypair.generate();
 
@@ -179,11 +180,12 @@ const App = () => {
 
       let escrow;
       [escrow] = await anchor.web3.PublicKey.findProgramAddress([
-        anchor.utils.bytes.utf8.encode("treasury8"),
-        depositor.toBuffer()
+        anchor.utils.bytes.utf8.encode(treasuryId),
+        // depositor.toBuffer()
       ], 
       program.programId);
-      const amount = new anchor.BN(100000000);
+      const amount = new anchor.BN(1);
+      // const amount = new anchor.BN(100000000);
       
       const tx = await program.methods.initTreasury(amount)
         .accounts({
@@ -215,12 +217,11 @@ const App = () => {
       let depositor = new PublicKey(walletaddress);
       let mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
       let depositor_token_account = new PublicKey('6Sta9fu8asbk2qoGj3PXeVLxXTeJD6UvJb6WGkcbV1Kz');
-      let treasuryTokenAccount = new PublicKey('V6PENuHFPBo1U2rURFG1MEdLRMAzBp9ysVjzCTUCSZw');
-      let solTreasury = new PublicKey('2zhEsufiMW4Vpy5rugFHDLtVUYyC1Lt7cAJ266jHaeDx');
+      let treasuryTokenAccount = new PublicKey('6aSGsMZobFQA8zcE5DwDvWsWLWHrdbTYCod2feBjHAmH');
       let treasury;
       [treasury] = await anchor.web3.PublicKey.findProgramAddress([
-        anchor.utils.bytes.utf8.encode("treasury8"),
-        depositor.toBuffer()
+        anchor.utils.bytes.utf8.encode(treasuryId),
+        // depositor.toBuffer()
       ], 
       program.programId);
       
@@ -233,7 +234,6 @@ const App = () => {
           mint,
           depositorTokenAccount: depositor_token_account,
           treasury,
-          solTreasury,
           treasuryTokenAccount: treasuryTokenAccount,
           tokenProgram: splToken.TOKEN_PROGRAM_ID,
           rent: SYSVAR_RENT_PUBKEY,
