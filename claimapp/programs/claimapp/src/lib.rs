@@ -347,7 +347,7 @@ pub struct InitClaim<'info> {
     pub claim_contract: Account<'info, Contract>,
 
     #[account(
-        constraint = mint.key() == nft_token_account.mint,
+        // constraint = mint.key() == nft_token_account.mint,
         // OWNER VERIFICATION, REMOVE LATER
         // constraint = nft_token_account.owner == signer.key(),
         constraint = nft_token_account.amount == 1,
