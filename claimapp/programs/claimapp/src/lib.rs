@@ -328,10 +328,19 @@ pub struct InitClaim<'info> {
     )] 
     pub claim_contract: Account<'info, Contract>,
 
+    #[account(
+        mut,
+        constraint = mint.key() == nft_token_account.mint,
+        // OWNER VERIFICATION, REMOVE LATER
+        // constraint = nft_token_account.owner == signer.key(),
+        constraint = nft_token_account.amount == 1,
+    )]
+    pub nft_token_account: Account<'info, TokenAccount>,
+
     // NFT mint of the owner
     // Might have some more verifications here
     #[account(
-        mint::authority = NFT_UPDATE_AUTHORITY
+        token::authority = NFT_UPDATE_AUTHORITY
     )]
     pub mint: Account<'info, Mint>,
 
