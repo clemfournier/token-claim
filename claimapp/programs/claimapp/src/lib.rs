@@ -10,10 +10,12 @@ declare_id!("6YF6WkHwsNwssuXWBi1BktqgpC27QyoJw9cd3VDrobZi");
 pub mod claimapp {
     use super::*;
 
-    pub const OWNERS: &[Pubkey] = &[pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz"), pubkey!("FZ5FgLRom1Xv9dUGxTTJX5tU5We6BgyWXw3GytWaU7op")];
+    pub const TREASURY: &[u8] = b"treasury8";
 
-    pub const OWNER1: Pubkey = pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz");
-    pub const OWNER2: Pubkey = pubkey!("FZ5FgLRom1Xv9dUGxTTJX5tU5We6BgyWXw3GytWaU7op");
+    pub const OWNERS: &[Pubkey] = &[
+        pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz"),
+        pubkey!("FZ5FgLRom1Xv9dUGxTTJX5tU5We6BgyWXw3GytWaU7op")
+    ];
 
     pub fn init_contract(ctx: Context<InitContract>, limit: u64) -> Result<()> {
         ctx.accounts.claim_contract_account.is_active = true;
@@ -106,7 +108,7 @@ pub mod claimapp {
                     to: ctx.accounts.claimer_token_account.to_account_info(),
                     authority: ctx.accounts.treasury.to_account_info(), 
                 },
-                &[&["treasury8".as_bytes(), ctx.accounts.depositor.key().as_ref(), &[ctx.accounts.treasury.bump]]],
+                &[&[TREASURY.as_ref(), ctx.accounts.depositor.key().as_ref(), &[ctx.accounts.treasury.bump]]],
             ),
             ctx.accounts.treasury_token_account.amount,
         )?;
@@ -190,7 +192,7 @@ pub struct InitTreasury<'info> {
         init, 
         payer = depositor,  
         space=Treasury::LEN,
-        seeds = ["treasury8".as_bytes(), depositor.key().as_ref()],
+        seeds = [TREASURY.as_ref(), depositor.key().as_ref()],
         bump,
     )]
     pub treasury: Account<'info, Treasury>,
@@ -233,7 +235,7 @@ pub struct AddToTreasury<'info> {
 
     #[account(
         mut,
-        seeds = ["treasury8".as_bytes(), depositor.key().as_ref()],
+        seeds = [TREASURY.as_ref(), depositor.key().as_ref()],
         bump = treasury.bump,
     )]
     pub treasury: Account<'info, Treasury>,
@@ -292,7 +294,7 @@ pub struct InitClaim<'info> {
     // Treasury account, account who hold the token's token account
     #[account(
         mut,
-        seeds = ["treasury8".as_bytes(), depositor.key().as_ref()],
+        seeds = [TREASURY.as_ref(), depositor.key().as_ref()],
         bump = treasury.bump,
     )]
     pub treasury: Account<'info, Treasury>,
