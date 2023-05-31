@@ -15,14 +15,16 @@ pub mod claimapp {
     pub const CONTRACT: &[u8] = b"contract8";
     pub const CLAIM: &[u8] = b"claim8";
     pub const TOKEN_MINT: &Pubkey = &pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz");
+    pub const NFT_UPDATE_AUTHORITY: &Pubkey = &pubkey!("En54STTsmVrWA3Cd43SQNgiLrihRDG2iMJD6zWPHjYfW");
     pub const OWNERS: &[Pubkey] = &[
         pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz"),
         pubkey!("FZ5FgLRom1Xv9dUGxTTJX5tU5We6BgyWXw3GytWaU7op")
     ];
 
     pub fn init_contract(ctx: Context<InitContract>, limit: u64) -> Result<()> {
-        // NICE TO HAVE:
+        // NICE TO HAVE (TO BE ABLE TO SHOW A NICE ERROR MESSAGE):
         //// CHECK IF ENOUGH SOL TO CREATE THE CONTRACT
+
         ctx.accounts.claim_contract.bump = *ctx.bumps.get("claim_contract").unwrap();
         ctx.accounts.claim_contract.is_active = true;
         ctx.accounts.claim_contract.limit = limit;
@@ -34,7 +36,7 @@ pub mod claimapp {
     }
 
     pub fn init_treasury(ctx: Context<InitTreasury>, amount: u64) -> Result<()> {
-        // NICE TO HAVE:
+        // NICE TO HAVE (TO BE ABLE TO SHOW A NICE ERROR MESSAGE):
         //// CHECK IF ENOUGH SOL TO CREATE THE TREASURY
         //// CHECK IF THE DEPOSITOR HAS ENOUGH TOKENS TO DEPOSIT 
 
@@ -61,7 +63,7 @@ pub mod claimapp {
     }
 
     pub fn add_to_treasury(ctx: Context<AddToTreasury>, amount: u64, amount_sol: u64) -> Result<()> {
-        // NICE TO HAVE:
+        // NICE TO HAVE (TO BE ABLE TO SHOW A NICE ERROR MESSAGE):
         //// CHECK IF ENOUGH SOL TO DEPOSIT
         //// CHECK IF THE DEPOSITOR HAS ENOUGH TOKENS TO DEPOSIT
         
@@ -232,7 +234,7 @@ pub struct InitTreasury<'info> {
 #[derive(Accounts)]
 pub struct AddToTreasury<'info> {
 
-    /// Deposit authority
+    /// Deposit authority, owner only
     #[account(mut, constraint = OWNERS.contains(&depositor.key()))]
     depositor: Signer<'info>,
 
@@ -264,7 +266,11 @@ pub struct AddToTreasury<'info> {
 
 #[derive(Accounts)]
 pub struct InitContract<'info> {
-    // Making a global account for storing votes
+    // Signer, has to be an owner
+    #[account(mut, constraint = OWNERS.contains(&signer.key()))]
+    pub signer: Signer<'info>,
+
+    // Global account to store the claims
     #[account(
         init, 
         payer = signer,
@@ -273,9 +279,6 @@ pub struct InitContract<'info> {
         bump,
     )] 
     pub claim_contract: Account<'info, Contract>,
-
-    #[account(mut)]
-    pub signer: Signer<'info>,
 
     pub system_program: Program<'info, System>,
 }
@@ -326,6 +329,7 @@ pub struct InitClaim<'info> {
 
     // NFT mint of the owner
     // Might have some more verifications here
+    #[account(mint::authority = NFT_UPDATE_AUTHORITY)]
     pub mint: Account<'info, Mint>,
 
     token_program: Program<'info, Token>,
