@@ -362,6 +362,7 @@ pub struct InitClaim<'info> {
     pub nft_token_account: Account<'info, TokenAccount>,
 
     #[account()]
+    /// CHECK:
     pub nft_metadata: AccountInfo<'info>,
 
     // NFT mint of the owner
