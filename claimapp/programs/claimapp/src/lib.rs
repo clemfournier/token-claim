@@ -103,6 +103,7 @@ pub mod claimapp {
         // WAY MORE TEST
         // CHECK IF THE CLAIMER IS THE OWNER OF THE NFT
         // CHECK IF THE CLAIMER DIDNT ALREADY CLAIMED
+        // CHECK IF DIDNT REACH THE MAX CLAIMERS
     
         // CREATING THE CLAIM TOKEN ACCOUNT
         let claim_account_data = &mut ctx.accounts.claim_account;
@@ -266,10 +267,6 @@ pub struct AddToTreasury<'info> {
 
 #[derive(Accounts)]
 pub struct InitContract<'info> {
-    // Signer, has to be an owner
-    #[account(mut, constraint = OWNERS.contains(&signer.key()))]
-    pub signer: Signer<'info>,
-
     // Global account to store the claims
     #[account(
         init, 
@@ -279,6 +276,10 @@ pub struct InitContract<'info> {
         bump,
     )] 
     pub claim_contract: Account<'info, Contract>,
+
+    // Signer, has to be an owner
+    #[account(mut, constraint = OWNERS.contains(&signer.key()))]
+    pub signer: Signer<'info>,
 
     pub system_program: Program<'info, System>,
 }
