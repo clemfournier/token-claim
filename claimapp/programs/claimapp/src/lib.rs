@@ -23,10 +23,10 @@ pub mod claimapp {
     pub fn init_contract(ctx: Context<InitContract>, limit: u64) -> Result<()> {
         // NICE TO HAVE:
         //// CHECK IF ENOUGH SOL TO CREATE THE CONTRACT
-        ctx.accounts.claim_contract_account.bump = *ctx.bumps.get("contract").unwrap();
-        ctx.accounts.claim_contract_account.is_active = true;
-        ctx.accounts.claim_contract_account.limit = limit;
-        ctx.accounts.claim_contract_account.claimed = 0;
+        ctx.accounts.claim_contract.bump = *ctx.bumps.get("claim_contract").unwrap();
+        ctx.accounts.claim_contract.is_active = true;
+        ctx.accounts.claim_contract.limit = limit;
+        ctx.accounts.claim_contract.claimed = 0;
 
         msg!("Created a new claim contract, limit {0} claims", limit);
 
@@ -151,14 +151,14 @@ pub mod claimapp {
 
         // UPDATE CONTRACT DATA
         // CHECK IF WE REACHED THE LIMIT
-        ctx.accounts.claim_contract_account.claimed += 1;
+        ctx.accounts.claim_contract.claimed += 1;
 
         msg!("{0} claimed {1} tokens, for NFT {2}. {3} people have now claimed for {4} max", 
             ctx.accounts.signer.key(),
             CLAIM_AMOUNT,
             ctx.accounts.mint.key(),
-            ctx.accounts.claim_contract_account.claimed, 
-            ctx.accounts.claim_contract_account.limit
+            ctx.accounts.claim_contract.claimed, 
+            ctx.accounts.claim_contract.limit
         );
 
         msg!("Created a new claim account {0}, mint {1} owner {2} amount {3}", 
@@ -272,7 +272,7 @@ pub struct InitContract<'info> {
         seeds = [CONTRACT.as_ref()],
         bump,
     )] 
-    pub claim_contract_account: Account<'info, Contract>,
+    pub claim_contract: Account<'info, Contract>,
 
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -320,9 +320,9 @@ pub struct InitClaim<'info> {
     #[account(
         mut,
         seeds = [CONTRACT.as_ref()],
-        bump = claim_contract_account.bump,
+        bump = claim_contract.bump,
     )] 
-    pub claim_contract_account: Account<'info, Contract>,
+    pub claim_contract: Account<'info, Contract>,
 
     // NFT mint of the owner
     // Might have some more verifications here
