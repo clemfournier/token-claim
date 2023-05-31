@@ -11,7 +11,8 @@ pub mod claimapp {
     use super::*;
 
     pub const TREASURY: &[u8] = b"treasury8";
-    pub const MINT: &Pubkey = &pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz");
+    pub const CONTRACT: &[u8] = b"contract8";
+    pub const TOKEN_MINT: &Pubkey = &pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz");
     pub const OWNERS: &[Pubkey] = &[
         pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz"),
         pubkey!("FZ5FgLRom1Xv9dUGxTTJX5tU5We6BgyWXw3GytWaU7op")
@@ -22,7 +23,7 @@ pub mod claimapp {
         ctx.accounts.claim_contract_account.limit = limit;
         ctx.accounts.claim_contract_account.claimed = 0;
 
-        msg!("Created a new claim contract account, limit {0}", limit);
+        msg!("Created a new claim contract, limit {0} claims", limit);
 
         Ok(())
     }
@@ -181,6 +182,7 @@ pub struct InitTreasury<'info> {
     depositor: Signer<'info>,
 
     /// Token mint
+    #[account(constraint = TOKEN_MINT.key() == mint.key())] 
     mint: Account<'info, Mint>,
 
     /// ATA of x_mint 
@@ -201,6 +203,7 @@ pub struct InitTreasury<'info> {
         payer = depositor,  
         space=48
     )]
+    // SEE WHY I HAVE TO PUT "CHECK:"
     /// CHECK:
     pub sol_treasury: AccountInfo<'info>,
 
@@ -260,7 +263,9 @@ pub struct InitContract<'info> {
     #[account(
         init, 
         payer = signer,
-        space = Contract::LEN
+        space = Contract::LEN,
+        seeds = [CONTRACT.as_ref()],
+        bump,
     )] 
     pub claim_contract_account: Account<'info, Contract>,
 
