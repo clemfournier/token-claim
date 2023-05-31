@@ -10,8 +10,10 @@ declare_id!("6YF6WkHwsNwssuXWBi1BktqgpC27QyoJw9cd3VDrobZi");
 pub mod claimapp {
     use super::*;
 
+    pub const CLAIM_AMOUNT: u64 = 1;
     pub const TREASURY: &[u8] = b"treasury8";
     pub const CONTRACT: &[u8] = b"contract8";
+    pub const CLAIM: &[u8] = b"claim8";
     pub const TOKEN_MINT: &Pubkey = &pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz");
     pub const OWNERS: &[Pubkey] = &[
         pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz"),
@@ -19,6 +21,9 @@ pub mod claimapp {
     ];
 
     pub fn init_contract(ctx: Context<InitContract>, limit: u64) -> Result<()> {
+        // NICE TO HAVE:
+        //// CHECK IF ENOUGH SOL TO CREATE THE CONTRACT
+        ctx.accounts.claim_contract_account.bump = *ctx.bumps.get("contract").unwrap();
         ctx.accounts.claim_contract_account.is_active = true;
         ctx.accounts.claim_contract_account.limit = limit;
         ctx.accounts.claim_contract_account.claimed = 0;
@@ -29,6 +34,10 @@ pub mod claimapp {
     }
 
     pub fn init_treasury(ctx: Context<InitTreasury>, amount: u64) -> Result<()> {
+        // NICE TO HAVE:
+        //// CHECK IF ENOUGH SOL TO CREATE THE TREASURY
+        //// CHECK IF THE DEPOSITOR HAS ENOUGH TOKENS TO DEPOSIT 
+
         let escrow = &mut ctx.accounts.treasury;
         escrow.bump = *ctx.bumps.get("treasury").unwrap();
         escrow.depositor = ctx.accounts.depositor.key();
@@ -52,7 +61,10 @@ pub mod claimapp {
     }
 
     pub fn add_to_treasury(ctx: Context<AddToTreasury>, amount: u64, amount_sol: u64) -> Result<()> {
-        // ALSO CHECK IF THE DEPOSITER HAS ENOUGH MONEY ETC...
+        // NICE TO HAVE:
+        //// CHECK IF ENOUGH SOL TO DEPOSIT
+        //// CHECK IF THE DEPOSITOR HAS ENOUGH TOKENS TO DEPOSIT
+        
         if amount > 0 {
             anchor_spl::token::transfer(
                 CpiContext::new(
@@ -86,9 +98,6 @@ pub mod claimapp {
     }
 
     pub fn init_claim(ctx: Context<InitClaim>) -> Result<()> {
-        // AMOUNT WITH THE DECIMALS
-        let amount = 1;
-    
         // WAY MORE TEST
         // CHECK IF THE CLAIMER IS THE OWNER OF THE NFT
         // CHECK IF THE CLAIMER DIDNT ALREADY CLAIMED
@@ -96,7 +105,7 @@ pub mod claimapp {
         // CREATING THE CLAIM TOKEN ACCOUNT
         let claim_account_data = &mut ctx.accounts.claim_account;
         claim_account_data.bump = *ctx.bumps.get("claim_account").unwrap();
-        claim_account_data.amount = amount;
+        claim_account_data.amount = CLAIM_AMOUNT;
         claim_account_data.owner = ctx.accounts.signer.key();
         claim_account_data.mint = ctx.accounts.mint.key();
 
@@ -146,7 +155,7 @@ pub mod claimapp {
 
         msg!("{0} claimed {1} tokens, for NFT {2}. {3} people have now claimed for {4} max", 
             ctx.accounts.signer.key(),
-            amount,
+            CLAIM_AMOUNT,
             ctx.accounts.mint.key(),
             ctx.accounts.claim_contract_account.claimed, 
             ctx.accounts.claim_contract_account.limit
@@ -156,7 +165,7 @@ pub mod claimapp {
             ctx.accounts.claim_account.key(),
             ctx.accounts.mint.key(),
             ctx.accounts.signer.key(),
-            amount
+            CLAIM_AMOUNT
         );
     
         Ok(())
@@ -241,10 +250,6 @@ pub struct AddToTreasury<'info> {
     )]
     pub treasury: Account<'info, Treasury>,
 
-    #[account(mut)]
-    /// CHECK:
-    pub sol_treasury: AccountInfo<'info>,
-
     #[account(
         mut,
         token::mint = mint,
@@ -281,15 +286,12 @@ pub struct InitClaim<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
-    /// CHECK:
-    pub depositor: AccountInfo<'info>,
-
     // Claim account, PDA to store the claim information 
     #[account(
         init, 
         payer = signer, 
         space = Claim::LEN,
-        seeds = [b"claim".as_ref(), signer.key().as_ref()],
+        seeds = [CLAIM.as_ref(), signer.key().as_ref()],
         bump,
     )] 
     pub claim_account: Account<'info, Claim>,
@@ -301,10 +303,6 @@ pub struct InitClaim<'info> {
         bump = treasury.bump,
     )]
     pub treasury: Account<'info, Treasury>,
-
-    #[account(mut)]
-    /// CHECK:
-    pub sol_treasury: AccountInfo<'info>,
 
     // Treasury token account, token account who hold the tokens
     #[account(mut, constraint = treasury_token_account.key() == treasury.treasury_token_account)]
@@ -319,10 +317,11 @@ pub struct InitClaim<'info> {
     claimer_token_account: Account<'info, TokenAccount>,
 
     // Claim contract account, global account for storing claim counts
-    //     seeds = [b"claimcontract".as_ref(), depositor.key().as_ref()],
-    //     bump = claim_contract_account.bump,
-    // )] 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [CONTRACT.as_ref()],
+        bump = claim_contract_account.bump,
+    )] 
     pub claim_contract_account: Account<'info, Contract>,
 
     // NFT mint of the owner
@@ -361,6 +360,7 @@ impl Treasury {
 #[account]
 #[derive(Default)]
 pub struct Contract {
+    pub bump: u8,
     pub is_active: bool,
     pub claimed: u64,
     pub limit: u64
@@ -369,6 +369,7 @@ pub struct Contract {
 impl Contract {
     const LEN: usize = 
         8 + // discriminator
+        1 + // bump
         1 + // bool
         8 + // u64
         8; // u64
