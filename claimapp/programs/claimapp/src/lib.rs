@@ -115,11 +115,18 @@ pub mod claimapp {
             &mpl_token_metadata::id(),
         );
 
-        msg!("Metadata: {0}", metadata.key());
+        let mint_metadata= Metadata::from_account_info(&ctx.accounts.nft_metadata.to_account_info())?; 
 
-        if 1 == 1 {
-            return Ok(())
-        }
+        msg!("Metadata retrived: {0}, metadata sent: {1}", metadata.key(), ctx.accounts.nft_metadata.key());
+
+        if mint_metadata.collection.is_some() {
+            let collection = mint_metadata.collection.unwrap();
+            if collection.verified  {
+                msg!("Collection verified {0}", collection.key);
+                msg!("Metadata update auth: {0}", mint_metadata.update_authority.key());
+
+            }
+        } 
 
         // let mint_metadata= Metadata::from_account_info(metadata.as_ref().to_account_info())?; 
     
@@ -347,12 +354,15 @@ pub struct InitClaim<'info> {
     pub claim_contract: Account<'info, Contract>,
 
     #[account(
-        // constraint = mint.key() == nft_token_account.mint,
+        constraint = mint.key() == nft_token_account.mint,
         // OWNER VERIFICATION, REMOVE LATER
         // constraint = nft_token_account.owner == signer.key(),
         constraint = nft_token_account.amount == 1,
     )]
     pub nft_token_account: Account<'info, TokenAccount>,
+
+    #[account()]
+    pub nft_metadata: AccountInfo<'info>,
 
     // NFT mint of the owner
     // Might have some more verifications here
