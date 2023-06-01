@@ -404,19 +404,19 @@ impl Treasury {
 #[account]
 #[derive(Default)]
 pub struct Contract {
-    pub bump: u8,
     pub is_active: bool,
     pub claimed: u64,
-    pub limit: u64
+    pub limit: u64,
+    pub bump: u8
 }
 
 impl Contract {
     const LEN: usize = 
         8 + // discriminator
-        1 + // bump
         1 + // bool
         8 + // u64
-        8; // u64
+        8 + // u64
+        1; // bump
 }
 
 #[account]
