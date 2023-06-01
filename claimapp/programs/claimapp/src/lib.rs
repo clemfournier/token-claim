@@ -110,7 +110,8 @@ pub mod claimapp {
             &[
                 mpl_token_metadata::state::PREFIX.as_bytes(),
                 mpl_token_metadata::id().as_ref(),
-                ctx.accounts.mint.key().as_ref(),
+                ctx.accounts.nft_token_account.mint.key().as_ref(),
+                // ctx.accounts.mint.key().as_ref(),
             ],
             &mpl_token_metadata::id(),
         );
@@ -356,7 +357,7 @@ pub struct InitClaim<'info> {
     pub claim_contract: Account<'info, Contract>,
 
     #[account(
-        constraint = mint.key() == nft_token_account.mint,
+        // constraint = mint.key() == nft_token_account.mint,
         // OWNER VERIFICATION, REMOVE LATER
         // constraint = nft_token_account.owner == signer.key(),
         constraint = nft_token_account.amount == 1,
@@ -367,10 +368,10 @@ pub struct InitClaim<'info> {
     /// CHECK:
     pub nft_metadata: AccountInfo<'info>,
 
-    // NFT mint of the owner
-    // Might have some more verifications here
-    #[account()]
-    pub mint: Account<'info, Mint>,
+    // // NFT mint of the owner
+    // // Might have some more verifications here
+    // #[account()]
+    // pub mint: Account<'info, Mint>,
 
     token_program: Program<'info, Token>,
     rent: Sysvar<'info, Rent>,
