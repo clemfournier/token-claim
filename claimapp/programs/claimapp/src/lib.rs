@@ -298,7 +298,7 @@ pub struct InitContract<'info> {
     #[account(
         init, 
         payer = signer,
-        space = Contract::LEN,
+        space = Contract::LEN
         // seeds = [CONTRACT.as_ref()],
         // bump,
     )] 
@@ -414,8 +414,7 @@ impl Contract {
         8 + // discriminator
         1 + // bool
         8 + // u64
-        8 + // u64
-        1; // bump
+        8; // u64
 }
 
 #[account]
