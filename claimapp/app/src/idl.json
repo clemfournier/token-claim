@@ -313,6 +313,28 @@
       }
     }
   ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "MetadataMismatch",
+      "msg": "NFT Mismatch metadata"
+    },
+    {
+      "code": 6001,
+      "name": "UpdateAuthorityMismatch",
+      "msg": "NFT Mismatch update authority"
+    },
+    {
+      "code": 6002,
+      "name": "SymbolMismatch",
+      "msg": "NFT Mismatch symbol"
+    },
+    {
+      "code": 6003,
+      "name": "VaultDoesntHaveEnoughSol",
+      "msg": "Vault doesnt have enough SOL"
+    }
+  ],
   "metadata": {
     "address": "FReLJ3SZ6CAMg7QszqukqqtXC4yYdPv4pcu6ARajVAoG"
   }
