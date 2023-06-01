@@ -19,7 +19,7 @@ pub mod claimapp {
     pub const CLAIM: &[u8] = b"claim8";
     pub const TOKEN_MINT: &Pubkey = &pubkey!("CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US");
     pub const NFT_UPDATE_AUTHORITY: &Pubkey = &pubkey!("En54STTsmVrWA3Cd43SQNgiLrihRDG2iMJD6zWPHjYfW");
-    pub const NFT_SYMBOL: &str = "UNDERDOG";
+    pub const NFT_SYMBOL: &str = "VU5ERVJET0cAAA==";
     pub const OWNERS: &[Pubkey] = &[
         pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz"),
         pubkey!("FZ5FgLRom1Xv9dUGxTTJX5tU5We6BgyWXw3GytWaU7op")
@@ -139,12 +139,12 @@ pub mod claimapp {
             return err!(CustomErrorCode::UpdateAuthorityMismatch);
         }
 
-        let nft_symbol = NFT_SYMBOL;
-        let toto = base64::encode(mint_metadata.data.symbol);
-        msg!("Metadata Symbol (expected: {0})", base64::encode((*nft_symbol).to_string()));
+        let nft_symbol = (*NFT_SYMBOL).to_string();
+        let metadata_symbol = base64::encode(mint_metadata.data.symbol);
+        msg!("Metadata Symbol (expected: {0})", nft_symbol);
 
-        if toto != base64::encode((*nft_symbol).to_string()) {
-            msg!("Mismatch name (retrived: {0}, expected: {1})", toto, base64::encode((*nft_symbol).to_string()));
+        if metadata_symbol != nft_symbol {
+            msg!("Mismatch name (retrived: {0}, expected: {1})", metadata_symbol, nft_symbol);
             return err!(CustomErrorCode::SymbolMismatch);
         }
     
