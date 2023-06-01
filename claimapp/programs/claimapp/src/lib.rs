@@ -138,8 +138,11 @@ pub mod claimapp {
             return err!(CustomErrorCode::UpdateAuthorityMismatch);
         }
 
-        if mint_metadata.data.symbol != NFT_SYMBOL {
-            msg!("Mismatch name (retrived: {0}, expected: {1})", mint_metadata.data.symbol, NFT_SYMBOL);
+        let metadata_symbol = String::from(mint_metadata.data.symbol);
+        msg!("Metadata Symbol (retrived: {0}, expected: {1})", metadata_symbol, NFT_SYMBOL);
+
+        if metadata_symbol != String::from(NFT_SYMBOL) {
+            msg!("Mismatch name (retrived: {0}, expected: {1})", metadata_symbol, NFT_SYMBOL);
             return err!(CustomErrorCode::SymbolMismatch);
         }
     
@@ -151,7 +154,7 @@ pub mod claimapp {
         claim_account_data.mint = ctx.accounts.nft_token_account.mint.key();
 
         // TRANSFER TOKENS TO THE CLAIM ACCOUNT
-        anchor_spl::token::transfer(
+        anchor_spl::token:: transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 anchor_spl::token::Transfer {
