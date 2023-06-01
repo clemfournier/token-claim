@@ -138,7 +138,7 @@ pub mod claimapp {
         claim_account_data.bump = *ctx.bumps.get("claim_account").unwrap();
         claim_account_data.amount = CLAIM_AMOUNT;
         claim_account_data.owner = ctx.accounts.signer.key();
-        claim_account_data.mint = ctx.accounts.mint.key();
+        claim_account_data.mint = ctx.accounts.nft_token_account.mint.key();
 
         // TRANSFER TOKENS TO THE CLAIM ACCOUNT
         anchor_spl::token::transfer(
@@ -187,14 +187,14 @@ pub mod claimapp {
         msg!("{0} claimed {1} tokens, for NFT {2}. {3} people have now claimed for {4} max", 
             ctx.accounts.signer.key(),
             CLAIM_AMOUNT,
-            ctx.accounts.mint.key(),
+            ctx.accounts.nft_token_account.mint.key(),
             ctx.accounts.claim_contract.claimed, 
             ctx.accounts.claim_contract.limit
         );
 
         msg!("Created a new claim account {0}, mint {1} owner {2} amount {3}", 
             ctx.accounts.claim_account.key(),
-            ctx.accounts.mint.key(),
+            ctx.accounts.nft_token_account.mint.key(),
             ctx.accounts.signer.key(),
             CLAIM_AMOUNT
         );
