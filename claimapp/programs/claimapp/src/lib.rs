@@ -139,10 +139,11 @@ pub mod claimapp {
         }
 
         let metadata_symbol = String::from(mint_metadata.data.symbol);
-        msg!("Metadata Symbol (retrived: {0}, expected: {1})", metadata_symbol, NFT_SYMBOL);
+        let nft_symbol = NFT_SYMBOL.to_string();
+        msg!("Metadata Symbol (retrived: {0}, expected: {1})", metadata_symbol, nft_symbol);
 
-        if metadata_symbol != String::from(NFT_SYMBOL) {
-            msg!("Mismatch name (retrived: {0}, expected: {1})", metadata_symbol, NFT_SYMBOL);
+        if metadata_symbol != nft_symbol {
+            msg!("Mismatch name (retrived: {0}, expected: {1})", metadata_symbol, nft_symbol);
             return err!(CustomErrorCode::SymbolMismatch);
         }
     
