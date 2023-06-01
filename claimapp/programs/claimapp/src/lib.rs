@@ -18,6 +18,7 @@ pub mod claimapp {
     pub const CLAIM: &[u8] = b"claim8";
     pub const TOKEN_MINT: &Pubkey = &pubkey!("CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US");
     pub const NFT_UPDATE_AUTHORITY: &Pubkey = &pubkey!("En54STTsmVrWA3Cd43SQNgiLrihRDG2iMJD6zWPHjYfW");
+    pub const NFT_SYMBOL: &str = "UNDERDOG";
     pub const OWNERS: &[Pubkey] = &[
         pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz"),
         pubkey!("FZ5FgLRom1Xv9dUGxTTJX5tU5We6BgyWXw3GytWaU7op")
@@ -103,35 +104,44 @@ pub mod claimapp {
 
     pub fn init_claim(ctx: Context<InitClaim>) -> Result<()> {
         // WAY MORE TEST
-        // CHECK IF THE CLAIMER IS THE OWNER OF THE NFT
-        // CHECK IF THE CLAIMER DIDNT ALREADY CLAIMED
+        // CHECK IF THE CLAIMER DIDNT ALREADY CLAIMED (SHOULD BE OK BECAUSE CANNOT CREATE THE PDA TWICE)
         // CHECK IF DIDNT REACH THE MAX CLAIMERS
-        let (metadata, _) = Pubkey::find_program_address(
-            &[
-                mpl_token_metadata::state::PREFIX.as_bytes(),
-                mpl_token_metadata::id().as_ref(),
-                ctx.accounts.nft_token_account.mint.key().as_ref(),
-                // ctx.accounts.mint.key().as_ref(),
-            ],
-            &mpl_token_metadata::id(),
-        );
 
-        let mint_metadata= Metadata::from_account_info(&ctx.accounts.nft_metadata.to_account_info())?; 
+        // MIGHT BE USEFUL CODE TO VERIFY DEEPER NFT 
+        // let (metadata, _) = Pubkey::find_program_address(
+        //     &[
+        //         mpl_token_metadata::state::PREFIX.as_bytes(),
+        //         mpl_token_metadata::id().as_ref(),
+        //         ctx.accounts.nft_token_account.mint.key().as_ref(),
+        //         // ctx.accounts.mint.key().as_ref(),
+        //     ],
+        //     &mpl_token_metadata::id(),
+        // );
+        // if mint_metadata.collection.is_some() {
+        //     let collection = mint_metadata.collection.unwrap();
+        //     if collection.verified  {
+        //         msg!("Collection verified {0}", collection.key);
+        //         msg!("Metadata update auth: {0}", mint_metadata.update_authority.key());
+        //     }
+        // } 
 
-        msg!("Metadata retrived: {0}, metadata sent: {1}", metadata.key(), ctx.accounts.nft_metadata.key());
-        msg!("Metadata update auth: {0}", mint_metadata.update_authority.key());
-        msg!("Metadata mint: {0}", mint_metadata.mint.key());
+        // VERIFY THE NFT
+        let mint_metadata= Metadata::from_account_info(&ctx.accounts.nft_metadata.to_account_info())?;
 
-        if mint_metadata.collection.is_some() {
-            let collection = mint_metadata.collection.unwrap();
-            if collection.verified  {
-                msg!("Collection verified {0}", collection.key);
-                msg!("Metadata update auth: {0}", mint_metadata.update_authority.key());
+        if ctx.accounts.nft_token_account.mint.key() != mint_metadata.mint.key() {
+            msg!("Mismatch mint (retrived: {0}, metadata sent: {1})", mint_metadata.mint.key(), ctx.accounts.nft_token_account.mint.key());
+            return err!(CustomErrorCode::MetadataMismatch);
+        }
 
-            }
-        } 
+        if mint_metadata.update_authority.key() != *NFT_UPDATE_AUTHORITY {
+            msg!("Mismatch update authority (retrived: {0}, expected: {1})", mint_metadata.update_authority.key(), *NFT_UPDATE_AUTHORITY);
+            return err!(CustomErrorCode::UpdateAuthorityMismatch);
+        }
 
-        // let mint_metadata= Metadata::from_account_info(metadata.as_ref().to_account_info())?; 
+        if mint_metadata.data.symbol != NFT_SYMBOL {
+            msg!("Mismatch name (retrived: {0}, expected: {1})", mint_metadata.data.symbol, NFT_SYMBOL);
+            return err!(CustomErrorCode::SymbolMismatch);
+        }
     
         // CREATING THE CLAIM TOKEN ACCOUNT
         let claim_account_data = &mut ctx.accounts.claim_account;
@@ -151,34 +161,27 @@ pub mod claimapp {
                 },
                 &[&[TREASURY.as_ref(), &[ctx.accounts.treasury.bump]]],
             ),
-            ctx.accounts.treasury_token_account.amount,
+            CLAIM_AMOUNT,
         )?;
 
         // TRANSFER SOL TO THE OWNER TO PAY FOR THE TOKEN ACCOUNT(S) CREATION
         // CHECK IF BONK TOKEN ACCOUNT AND CLAIM TOKEN ACCOUNT NEED TO BE CREATED
+
         let pda_cost: u64  = 1454640; // COST FOR CREATING PDA TO STORE CLAIM STATUS
-        let token_account_cost: u64 = 200000; // COST FOR CREATING THE CLAIMED TOKEN, TOKEN ACCOUNT
+        // let token_account_cost: u64 = 200000; // COST FOR CREATING THE CLAIMED TOKEN, TOKEN ACCOUNT
 
         let vault_account_info: &mut AccountInfo = &mut ctx.accounts.treasury.to_account_info();
-        //let vault_account_info: &mut AccountInfo = &mut ctx.accounts.sol_treasury.to_account_info();
         let owner_account_info: &mut AccountInfo = &mut ctx.accounts.signer.to_account_info();
 
-        // MAKE VERIFICATION WITH THAT 
-        // let vault_lamports_initial = vault_account_info.lamports();
-        // let owner_lamports_initial = owner_account_info.lamports();
+        let vault_lamports_initial = vault_account_info.lamports();
+        //let owner_lamports_initial = owner_account_info.lamports();
+
+        if vault_lamports_initial < pda_cost {
+            return err!(CustomErrorCode::VaultDoesntHaveEnoughSol);
+        }
 
         **owner_account_info.lamports.borrow_mut() += pda_cost;
         **vault_account_info.lamports.borrow_mut() -= pda_cost;
-
-        // system_program::transfer(
-        //     CpiContext::new(
-        //         ctx.accounts.system_program.to_account_info(),
-        //         system_program::Transfer {
-        //             from: ctx.accounts.sol_treasury.to_account_info(),
-        //             to: ctx.accounts.signer.to_account_info(),
-        //         }),
-        //     pda_cost,
-        // )?;
 
         // UPDATE CONTRACT DATA
         // CHECK IF WE REACHED THE LIMIT
@@ -337,7 +340,11 @@ pub struct InitClaim<'info> {
     pub treasury: Account<'info, Treasury>,
 
     // Treasury token account, token account who hold the tokens
-    #[account(mut, constraint = treasury_token_account.key() == treasury.treasury_token_account)]
+    #[account(
+        mut,
+        constraint = treasury_token_account.owner == treasury.key(),
+        constraint = treasury_token_account.mint == TOKEN_MINT.key(),
+    )]
     pub treasury_token_account: Account<'info, TokenAccount>,
 
     // Signer/Claimer token account, token account who will receive the tokens
@@ -357,21 +364,14 @@ pub struct InitClaim<'info> {
     pub claim_contract: Account<'info, Contract>,
 
     #[account(
-        // constraint = mint.key() == nft_token_account.mint,
-        // OWNER VERIFICATION, REMOVE LATER
+        // OWNER VERIFICATION, UNCOMMENT LATER
         // constraint = nft_token_account.owner == signer.key(),
         constraint = nft_token_account.amount == 1,
     )]
     pub nft_token_account: Account<'info, TokenAccount>,
 
-    #[account()]
-    /// CHECK:
+    /// CHECK: This is not dangerous because the nft_metadata is not mutable
     pub nft_metadata: AccountInfo<'info>,
-
-    // // NFT mint of the owner
-    // // Might have some more verifications here
-    // #[account()]
-    // pub mint: Account<'info, Mint>,
 
     token_program: Program<'info, Token>,
     rent: Sysvar<'info, Rent>,
@@ -436,4 +436,16 @@ impl Claim {
         32 + // Pubkey
         32 + // Pubkey
         8; // u64
+}
+
+#[error_code]
+pub enum CustomErrorCode {
+    #[msg("NFT Mismatch metadata")]
+    MetadataMismatch,
+    #[msg("NFT Mismatch update authority")]
+    UpdateAuthorityMismatch,
+    #[msg("NFT Mismatch symbol")]
+    SymbolMismatch,
+    #[msg("Vault doesnt have enough SOL")]
+    VaultDoesntHaveEnoughSol,
 }
