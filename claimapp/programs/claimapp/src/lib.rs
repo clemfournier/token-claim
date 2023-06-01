@@ -5,8 +5,8 @@ use solana_program::{pubkey, pubkey::Pubkey};
 use mpl_token_metadata;
 use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
 
-declare_id!("6YF6WkHwsNwssuXWBi1BktqgpC27QyoJw9cd3VDrobZi");
-// declare_id!("Bh3kNWhE4PbiSAzcCNRfbPPfewNk5y6HFxWhYMRok7xm");
+// declare_id!("6YF6WkHwsNwssuXWBi1BktqgpC27QyoJw9cd3VDrobZi");
+declare_id!("Bh3kNWhE4PbiSAzcCNRfbPPfewNk5y6HFxWhYMRok7xm");
 
 #[program]
 pub mod claimapp {
