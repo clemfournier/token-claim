@@ -8,7 +8,7 @@
         {
           "name": "claimContract",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "signer",
@@ -274,10 +274,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          },
           {
             "name": "isActive",
             "type": "bool"
