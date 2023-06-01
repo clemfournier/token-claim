@@ -8,7 +8,7 @@
         {
           "name": "claimContract",
           "isMut": true,
-          "isSigner": true
+          "isSigner": false
         },
         {
           "name": "signer",
@@ -285,6 +285,10 @@
           {
             "name": "limit",
             "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
