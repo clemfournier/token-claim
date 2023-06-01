@@ -27,7 +27,7 @@ pub mod claimapp {
         // NICE TO HAVE (TO BE ABLE TO SHOW A NICE ERROR MESSAGE):
         //// CHECK IF ENOUGH SOL TO CREATE THE CONTRACT
 
-        ctx.accounts.claim_contract.bump = *ctx.bumps.get("claim_contract").unwrap();
+        // ctx.accounts.claim_contract.bump = *ctx.bumps.get("claim_contract").unwrap();
         ctx.accounts.claim_contract.is_active = true;
         ctx.accounts.claim_contract.limit = limit;
         ctx.accounts.claim_contract.claimed = 0;
@@ -102,10 +102,10 @@ pub mod claimapp {
     }
 
     pub fn init_claim(ctx: Context<InitClaim>) -> Result<()> {
-        // WAY MORE TEST
-        // CHECK IF THE CLAIMER IS THE OWNER OF THE NFT
-        // CHECK IF THE CLAIMER DIDNT ALREADY CLAIMED
-        // CHECK IF DIDNT REACH THE MAX CLAIMERS
+        // TEST TO ADD:
+        //// CHECK IF THE CLAIMER DIDNT ALREADY CLAIMED (WILL FAIL IF THE PDA ALREADY CREATED)
+        //// CHECK IF DIDNT REACH THE MAX CLAIMERS
+
         let (metadata, _) = Pubkey::find_program_address(
             &[
                 mpl_token_metadata::state::PREFIX.as_bytes(),
@@ -299,8 +299,8 @@ pub struct InitContract<'info> {
         init, 
         payer = signer,
         space = Contract::LEN,
-        seeds = [CONTRACT.as_ref()],
-        bump,
+        // seeds = [CONTRACT.as_ref()],
+        // bump,
     )] 
     pub claim_contract: Account<'info, Contract>,
 
@@ -350,8 +350,8 @@ pub struct InitClaim<'info> {
     // Claim contract account, global account for storing claim counts
     #[account(
         mut,
-        seeds = [CONTRACT.as_ref()],
-        bump = claim_contract.bump,
+        // seeds = [CONTRACT.as_ref()],
+        // bump = claim_contract.bump,
     )] 
     pub claim_contract: Account<'info, Contract>,
 
@@ -407,7 +407,6 @@ pub struct Contract {
     pub is_active: bool,
     pub claimed: u64,
     pub limit: u64,
-    pub bump: u8
 }
 
 impl Contract {
