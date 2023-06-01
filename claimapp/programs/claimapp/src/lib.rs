@@ -6,7 +6,7 @@ use mpl_token_metadata;
 use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
 
 // declare_id!("6YF6WkHwsNwssuXWBi1BktqgpC27QyoJw9cd3VDrobZi");
-declare_id!("Bh3kNWhE4PbiSAzcCNRfbPPfewNk5y6HFxWhYMRok7xm");
+declare_id!("FReLJ3SZ6CAMg7QszqukqqtXC4yYdPv4pcu6ARajVAoG");
 
 #[program]
 pub mod claimapp {
