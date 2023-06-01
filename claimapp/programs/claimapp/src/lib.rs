@@ -4,6 +4,7 @@ use anchor_lang::system_program;
 use solana_program::{pubkey, pubkey::Pubkey};
 use mpl_token_metadata;
 use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
+use base64;
 
 // declare_id!("6YF6WkHwsNwssuXWBi1BktqgpC27QyoJw9cd3VDrobZi");
 declare_id!("FReLJ3SZ6CAMg7QszqukqqtXC4yYdPv4pcu6ARajVAoG");
@@ -138,12 +139,12 @@ pub mod claimapp {
             return err!(CustomErrorCode::UpdateAuthorityMismatch);
         }
 
-        let metadata_symbol = String::from(mint_metadata.data.symbol);
         let nft_symbol = NFT_SYMBOL;
-        msg!("Metadata Symbol (expected: {0})", (*nft_symbol).to_string());
+        let toto = base64::encode(mint_metadata.data.symbol);
+        msg!("Metadata Symbol (expected: {0})", base64::encode((*nft_symbol).to_string()));
 
-        if metadata_symbol != (*nft_symbol).to_string() {
-            msg!("Mismatch name (retrived: {0}, expected: {1})", metadata_symbol, (*nft_symbol).to_string());
+        if toto != base64::encode((*nft_symbol).to_string()) {
+            msg!("Mismatch name (retrived: {0}, expected: {1})", toto, base64::encode((*nft_symbol).to_string()));
             return err!(CustomErrorCode::SymbolMismatch);
         }
     
