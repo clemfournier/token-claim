@@ -13,9 +13,9 @@ pub mod claimapp {
     use super::*;
 
     pub const CLAIM_AMOUNT: u64 = 1;
-    pub const TREASURY: &[u8] = b"treasury9";
-    pub const CONTRACT: &[u8] = b"contract9";
-    pub const CLAIM: &[u8] = b"claim9";
+    pub const TREASURY: &[u8] = b"treasury8";
+    pub const CONTRACT: &[u8] = b"contract8";
+    pub const CLAIM: &[u8] = b"claim8";
     pub const TOKEN_MINT: &Pubkey = &pubkey!("CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US");
     pub const NFT_UPDATE_AUTHORITY: &Pubkey = &pubkey!("En54STTsmVrWA3Cd43SQNgiLrihRDG2iMJD6zWPHjYfW");
     pub const OWNERS: &[Pubkey] = &[
@@ -415,7 +415,8 @@ impl Contract {
         8 + // discriminator
         1 + // bool
         8 + // u64
-        8; // u64
+        8 + // u64
+        1; // bump
 }
 
 #[account]
