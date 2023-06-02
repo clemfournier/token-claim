@@ -405,7 +405,7 @@ pub struct InitClaim<'info> {
     /// CHECK: This is not dangerous because the nft_metadata is not mutable
     pub nft_metadata: AccountInfo<'info>,
 
-    // token_program: Program<'info, Token>,
+    token_program: Program<'info, Token>,
     // rent: Sysvar<'info, Rent>,
     system_program: Program<'info, System>,
 }
