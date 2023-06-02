@@ -9,14 +9,16 @@ import * as splToken from "@solana/spl-token";
 import { publicKey, u64, bool } from '@solana/buffer-layout-utils';
 import { u32, u8, struct } from '@solana/buffer-layout';
 
-
 window.Buffer = Buffer
 const programID = new PublicKey(idl.metadata.address)
 const network = clusterApiUrl("devnet")
 const opts = {
   preflightCommitment:"processed",
 }
+const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 const mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
+const nftTokenAccount = new PublicKey('Czs8q51C3jfUNY9pXFwQ61Q7uc4H18gqFjQhrBvQeHC2');
+const nftMetadata = new PublicKey('sGHgm6DsCpG8WkhnEmNqzFDguq77xTERYr5QUtBJhpH');
 const treasuryId = 'treasury8';
 const contractId = 'contract8';
 const claimId = 'claim8';
@@ -37,6 +39,27 @@ const App = () => {
     );
     return provider;
   };
+  
+  const getTokenAccountByAccountAndMint = async (accountAddress, mintAddress, connection) => {
+    const associatedTokenAccounts = await connection.getParsedTokenAccountsByOwner(
+      accountAddress,
+      {
+        mint: mintAddress,
+        programId: TOKEN_PROGRAM_ID,
+      }
+    );
+  
+    // Extract the token account addresses from the result
+    const tokenAccounts = associatedTokenAccounts.value.map((account) =>
+      account.pubkey.toString()
+    );
+
+    if (tokenAccounts.length === 1) {
+      return tokenAccounts[0];
+    } else {
+      return null;
+    }
+  }
 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -176,17 +199,19 @@ const App = () => {
       ], 
       program.programId);
 
+      const treasuryTokenAccount = await getTokenAccountByAccountAndMint(treasury, mint, provider.connection);
+      const claimerTokenAccount = await getTokenAccountByAccountAndMint(new PublicKey(walletaddress), mint, provider.connection);
+
       const tx = await program.methods.initClaim()
       .accounts({
         signer,
         claimAccount,
-        treasury, //: new PublicKey('BqZUhaHrdBxyX8Rkqva5cmQb8nuoZztaRzpRmDZFpNt5'),
-        treasuryTokenAccount: new PublicKey('jkmbmZKfdBdFwQit12tPTCchFBGmhHFx58ANsH919Hz'),
-        claimerTokenAccount: new PublicKey('DVN6VeweRmS3k1pG9oiLgduSk39hpfk2kzapjnUqeTLC'),
+        treasury,
+        treasuryTokenAccount,
+        claimerTokenAccount,
         claimContract,
-        nftTokenAccount: new PublicKey('Czs8q51C3jfUNY9pXFwQ61Q7uc4H18gqFjQhrBvQeHC2'),
-        nftMetadata: new PublicKey('sGHgm6DsCpG8WkhnEmNqzFDguq77xTERYr5QUtBJhpH'),
-        // mint: new PublicKey('46pcSL5gmjBrPqGKFaLbbCmR6iVuLJbnQy13hAe7s6CC'),
+        nftTokenAccount,
+        nftMetadata,
         tokenProgram: splToken.TOKEN_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: anchor.web3.SystemProgram.programId
@@ -205,7 +230,7 @@ const App = () => {
 
     try{
       let depositor = new PublicKey(walletaddress);
-      let depositor_token_account = new PublicKey('6Mac2LbWjvaUJXbHZ1w3Ux7mVYUDt74vsBXVvF21wwuB');
+      const depositor_token_account = await getTokenAccountByAccountAndMint(depositor, mint, provider.connection);
       // let depositor_token_account = new PublicKey('6Mac2LbWjvaUJXbHZ1w3Ux7mVYUDt74vsBXVvF21wwuB');
       // let depositor_token_account = new PublicKey('3gDPGmt2gtiqFY79ayYdtcvqQSHEXKYCWvPUQZ7ZyVfa');
       let treasuryTokenAccount = anchor.web3.Keypair.generate();
@@ -250,17 +275,17 @@ const App = () => {
     try{
       console.log('depositor' , walletaddress);
       let depositor = new PublicKey(walletaddress);
-      let mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
-      let depositor_token_account = new PublicKey('6Mac2LbWjvaUJXbHZ1w3Ux7mVYUDt74vsBXVvF21wwuB');
-      let treasuryTokenAccount = new PublicKey('jkmbmZKfdBdFwQit12tPTCchFBGmhHFx58ANsH919Hz');
+      let depositor_token_account = await getTokenAccountByAccountAndMint(depositor, mint, provider.connection);
+      console.log('depositor_token_account', depositor_token_account.toString());
       let treasury;
       [treasury] = await anchor.web3.PublicKey.findProgramAddress([
         anchor.utils.bytes.utf8.encode(treasuryId),
         // depositor.toBuffer()
       ], 
       program.programId);
+      let treasuryTokenAccount = await getTokenAccountByAccountAndMint(treasury, mint, provider.connection);
       
-      const amount = new anchor.BN(100000000);
+      const amount = new anchor.BN(1000000000);
       const sol_amount = new anchor.BN(100000000);
       
       const tx = await program.methods.addToTreasury(amount, sol_amount)
