@@ -13,7 +13,7 @@ declare_id!("FReLJ3SZ6CAMg7QszqukqqtXC4yYdPv4pcu6ARajVAoG");
 pub mod claimapp {
     use super::*;
 
-    pub const CLAIM_AMOUNT: u64 = 1;
+    // pub const CLAIM_AMOUNT: u64 = 1;
     pub const TREASURY: &[u8] = b"treasury9";
     pub const CONTRACT: &[u8] = b"contract9";
     pub const CLAIM: &[u8] = b"claim9";
@@ -172,7 +172,7 @@ pub mod claimapp {
         // CREATING THE CLAIM TOKEN ACCOUNT
         let claim_account_data = &mut ctx.accounts.claim_account;
         claim_account_data.bump = *ctx.bumps.get("claim_account").unwrap();
-        claim_account_data.amount = CLAIM_AMOUNT;
+        claim_account_data.amount = ctx.accounts.claim_contract.claim_amount;
         claim_account_data.owner = ctx.accounts.signer.key();
         claim_account_data.mint = ctx.accounts.nft_token_account.mint.key();
 
@@ -187,7 +187,7 @@ pub mod claimapp {
                 },
                 &[&[TREASURY.as_ref(), &[ctx.accounts.treasury.bump]]],
             ),
-            CLAIM_AMOUNT,
+            ctx.accounts.claim_contract.claim_amount,
         )?;
 
         // TRANSFER SOL TO THE OWNER TO PAY FOR THE TOKEN ACCOUNT(S) CREATION
@@ -221,7 +221,7 @@ pub mod claimapp {
 
         msg!("{0} claimed {1} tokens, for NFT {2}. {3} people have now claimed for {4} max", 
             ctx.accounts.signer.key(),
-            CLAIM_AMOUNT,
+            ctx.accounts.claim_contract.claim_amount,
             ctx.accounts.nft_token_account.mint.key(),
             ctx.accounts.claim_contract.claimed, 
             ctx.accounts.claim_contract.limit
@@ -231,7 +231,7 @@ pub mod claimapp {
             ctx.accounts.claim_account.key(),
             ctx.accounts.nft_token_account.mint.key(),
             ctx.accounts.signer.key(),
-            CLAIM_AMOUNT
+            ctx.accounts.claim_contract.claim_amount
         );
     
         Ok(())
