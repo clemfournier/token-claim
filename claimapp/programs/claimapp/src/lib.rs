@@ -45,6 +45,21 @@ pub mod claimapp {
         Ok(())
     }
 
+    pub fn update_contract(ctx: Context<UpdateContract>, limit: u64, collection_name: String, claim_amount: u64, is_active: bool) -> Result<()> {
+        // NICE TO HAVE (TO BE ABLE TO SHOW A NICE ERROR MESSAGE):
+        //// CHECK IF ENOUGH SOL TO CREATE THE CONTRACT
+
+        ctx.accounts.claim_contract.is_active = is_active;
+        ctx.accounts.claim_contract.limit = limit;
+        ctx.accounts.claim_contract.claim_amount = claim_amount;
+        ctx.accounts.claim_contract.collection_name = collection_name;
+        ctx.accounts.claim_contract.update_authority = ctx.accounts.update_authority.key();
+
+        msg!("Updated claim contract");
+
+        Ok(())
+    }
+
     pub fn init_treasury(ctx: Context<InitTreasury>, amount: u64) -> Result<()> {
         // NICE TO HAVE (TO BE ABLE TO SHOW A NICE ERROR MESSAGE):
         //// CHECK IF ENOUGH SOL TO CREATE THE TREASURY
@@ -335,6 +350,27 @@ pub struct InitContract<'info> {
 
     /// Token mint
     mint: Account<'info, Mint>,
+
+    /// Update Authority
+    /// CHECK: This is fine
+    update_authority: AccountInfo<'info>,
+
+    // Signer, has to be an owner
+    #[account(mut, constraint = OWNERS.contains(&signer.key()))]
+    pub signer: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct UpdateContract<'info> {
+    // Global account to store the claims
+    #[account(
+        mut,
+        seeds = [CONTRACT.as_ref()],
+        bump = claim_contract.bump,
+    )] 
+    pub claim_contract: Account<'info, Contract>,
 
     /// Update Authority
     /// CHECK: This is fine
