@@ -14,18 +14,19 @@ pub mod claimapp {
     use super::*;
 
     pub const CLAIM_AMOUNT: u64 = 1;
-    pub const TREASURY: &[u8] = b"treasury8";
-    pub const CONTRACT: &[u8] = b"contract8";
-    pub const CLAIM: &[u8] = b"claim8";
-    pub const TOKEN_MINT: &Pubkey = &pubkey!("CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US");
-    pub const NFT_UPDATE_AUTHORITY: &Pubkey = &pubkey!("En54STTsmVrWA3Cd43SQNgiLrihRDG2iMJD6zWPHjYfW");
-    pub const NFT_SYMBOL: &str = "VU5ERVJET0cAAA==";
+    pub const TREASURY: &[u8] = b"treasury9";
+    pub const CONTRACT: &[u8] = b"contract9";
+    pub const CLAIM: &[u8] = b"claim9";
+    // pub const TOKEN_MINT: &Pubkey = &pubkey!("CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US");
+    // pub const NFT_UPDATE_AUTHORITY: &Pubkey = &pubkey!("En54STTsmVrWA3Cd43SQNgiLrihRDG2iMJD6zWPHjYfW");
+    // pub const NFT_SYMBOL: &str = "VU5ERVJET0cAAA==";
+
     pub const OWNERS: &[Pubkey] = &[
         pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz"),
         pubkey!("FZ5FgLRom1Xv9dUGxTTJX5tU5We6BgyWXw3GytWaU7op")
     ];
 
-    pub fn init_contract(ctx: Context<InitContract>, limit: u64) -> Result<()> {
+    pub fn init_contract(ctx: Context<InitContract>, limit: u64, collection_name: String, claim_amount: u64) -> Result<()> {
         // NICE TO HAVE (TO BE ABLE TO SHOW A NICE ERROR MESSAGE):
         //// CHECK IF ENOUGH SOL TO CREATE THE CONTRACT
 
@@ -33,6 +34,11 @@ pub mod claimapp {
         ctx.accounts.claim_contract.is_active = true;
         ctx.accounts.claim_contract.limit = limit;
         ctx.accounts.claim_contract.claimed = 0;
+        ctx.accounts.claim_contract.claim_amount = claim_amount;
+        ctx.accounts.claim_contract.collection_name = collection_name;
+        ctx.accounts.claim_contract.mint = ctx.accounts.mint.key();
+        ctx.accounts.claim_contract.update_authority = ctx.accounts.update_authority.key();
+
 
         msg!("Created a new claim contract, limit {0} claims", limit);
 
@@ -103,7 +109,7 @@ pub mod claimapp {
         Ok(())
     }
 
-    pub fn init_claim(ctx: Context<InitClaim>) -> Result<()> {
+    pub fn init_claim(ctx: Context<InitClaim>, new_token_account: bool) -> Result<()> {
         // WAY MORE TEST
         // CHECK IF THE CLAIMER DIDNT ALREADY CLAIMED (SHOULD BE OK BECAUSE CANNOT CREATE THE PDA TWICE)
         // CHECK IF DIDNT REACH THE MAX CLAIMERS
@@ -134,12 +140,12 @@ pub mod claimapp {
             return err!(CustomErrorCode::MetadataMismatch);
         }
 
-        if mint_metadata.update_authority.key() != *NFT_UPDATE_AUTHORITY {
-            msg!("Mismatch update authority (retrived: {0}, expected: {1})", mint_metadata.update_authority.key(), *NFT_UPDATE_AUTHORITY);
+        if mint_metadata.update_authority.key() != ctx.accounts.claim_contract.update_authority.key() {
+            msg!("Mismatch update authority (retrived: {0}, expected: {1})", mint_metadata.update_authority.key(), ctx.accounts.claim_contract.update_authority.key());
             return err!(CustomErrorCode::UpdateAuthorityMismatch);
         }
 
-        let nft_symbol = (*NFT_SYMBOL).to_string();
+        let nft_symbol = ctx.accounts.claim_contract.collection_name.to_string();
         let metadata_symbol = base64::encode(mint_metadata.data.symbol);
         msg!("Metadata Symbol (expected: {0})", nft_symbol);
 
@@ -156,7 +162,7 @@ pub mod claimapp {
         claim_account_data.mint = ctx.accounts.nft_token_account.mint.key();
 
         // TRANSFER TOKENS TO THE CLAIM ACCOUNT
-        anchor_spl::token:: transfer(
+        anchor_spl::token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 anchor_spl::token::Transfer {
@@ -172,8 +178,14 @@ pub mod claimapp {
         // TRANSFER SOL TO THE OWNER TO PAY FOR THE TOKEN ACCOUNT(S) CREATION
         // CHECK IF BONK TOKEN ACCOUNT AND CLAIM TOKEN ACCOUNT NEED TO BE CREATED
 
-        let pda_cost: u64  = 1454640; // COST FOR CREATING PDA TO STORE CLAIM STATUS
-        // let token_account_cost: u64 = 200000; // COST FOR CREATING THE CLAIMED TOKEN, TOKEN ACCOUNT
+        let pda_cost: u64  = 1454640;
+        let token_account_cost: u64 = 2039280;
+
+        let mut total_cost: u64 = pda_cost;
+
+        if new_token_account == true {
+            total_cost += token_account_cost;
+        }
 
         let vault_account_info: &mut AccountInfo = &mut ctx.accounts.treasury.to_account_info();
         let owner_account_info: &mut AccountInfo = &mut ctx.accounts.signer.to_account_info();
@@ -185,8 +197,8 @@ pub mod claimapp {
             return err!(CustomErrorCode::VaultDoesntHaveEnoughSol);
         }
 
-        **owner_account_info.lamports.borrow_mut() += pda_cost;
-        **vault_account_info.lamports.borrow_mut() -= pda_cost;
+        **owner_account_info.lamports.borrow_mut() += total_cost;
+        **vault_account_info.lamports.borrow_mut() -= total_cost;
 
         // UPDATE CONTRACT DATA
         // CHECK IF WE REACHED THE LIMIT
@@ -230,7 +242,7 @@ pub struct InitTreasury<'info> {
     depositor: Signer<'info>,
 
     /// Token mint
-    #[account(constraint = TOKEN_MINT.key() == mint.key())] 
+    #[account(constraint = claim_contract.mint.key() == mint.key())] 
     mint: Account<'info, Mint>,
 
     /// ATA of x_mint 
@@ -262,6 +274,14 @@ pub struct InitTreasury<'info> {
         token::authority = treasury,
     )]
     treasury_token_account: Account<'info, TokenAccount>,
+
+    // Claim contract account, global account for storing claim counts
+    #[account(
+        mut,
+        seeds = [CONTRACT.as_ref()],
+        bump = claim_contract.bump,
+    )] 
+    pub claim_contract: Account<'info, Contract>,
 
     token_program: Program<'info, Token>,
     rent: Sysvar<'info, Rent>,
@@ -313,6 +333,12 @@ pub struct InitContract<'info> {
     )] 
     pub claim_contract: Account<'info, Contract>,
 
+    /// Token mint
+    mint: Account<'info, Mint>,
+
+    /// Update Authority
+    update_authority: AccountInfo<'info>,
+
     // Signer, has to be an owner
     #[account(mut, constraint = OWNERS.contains(&signer.key()))]
     pub signer: Signer<'info>,
@@ -348,7 +374,7 @@ pub struct InitClaim<'info> {
     #[account(
         mut,
         constraint = treasury_token_account.owner == treasury.key(),
-        constraint = treasury_token_account.mint == TOKEN_MINT.key(),
+        constraint = treasury_token_account.mint == claim_contract.mint.key(),
     )]
     pub treasury_token_account: Account<'info, TokenAccount>,
 
@@ -413,7 +439,11 @@ pub struct Contract {
     pub is_active: bool,
     pub claimed: u64,
     pub limit: u64,
-    pub bump: u8
+    pub bump: u8,
+    pub mint: Pubkey,
+    pub update_authority: Pubkey,
+    pub collection_name: String,
+    pub claim_amount: u64,
 }
 
 impl Contract {
@@ -422,7 +452,12 @@ impl Contract {
         1 + // bool
         8 + // u64
         8 + // u64
-        1; // bump
+        1 + // bump
+        32 + // Pubkey
+        32 + // Pubkey
+        24 + // String
+        8; // u64
+
 }
 
 #[account]
