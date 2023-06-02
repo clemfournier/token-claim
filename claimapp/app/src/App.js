@@ -6,6 +6,8 @@ import idl from './idl.json' //get the smartcontract data structure model from t
 import { Connection, PublicKey, clusterApiUrl, SYSVAR_RENT_PUBKEY } from '@solana/web3.js';
 import { Program, AnchorProvider } from '@project-serum/anchor';
 import * as splToken from "@solana/spl-token";
+import { publicKey, u64, bool } from '@solana/buffer-layout-utils';
+import { u32, u8, struct } from '@solana/buffer-layout';
 
 
 window.Buffer = Buffer
@@ -14,8 +16,6 @@ const network = clusterApiUrl("devnet")
 const opts = {
   preflightCommitment:"processed",
 }
-const depositor = new PublicKey('EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz');
-const claimContractAccount = new PublicKey('AooKy14uWdPQbQHSPd3oEZ4epK4ism6NYfxiBjYpPB7Y');
 const mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
 const treasuryId = 'treasury8';
 const contractId = 'contract8';
@@ -24,6 +24,7 @@ const claimId = 'claim8';
 const App = () => {
   const [Loading, setLoading] = useState(false)
   const [walletaddress, setWalletAddress] = useState("");
+  const [contract, setContract] = useState(null);
   
   const { solana } = window;
   const getProvider = () => {
@@ -66,9 +67,41 @@ const App = () => {
     return () => window.removeEventListener("load", onLoad);
   }, []);
 
-  const onLoad = () => {
+  const fetchAndParseMint = async (mint, solanaConnection) => {
+    try {
+        // console.log(`Step - 1: Fetching Account Data for ${mint.toBase58()}`);
+        let {data} = await solanaConnection.getAccountInfo(mint) || {};
+        if (!data) return;
+        // console.log(`Step - 2: Deserializing Found Account Data`);
+        const deserialized = MintLayout.decode(data);
+        console.log(deserialized);
+        setContract(deserialized);
+    }
+    catch {
+        return null;
+    }
+}
+
+  const getContractData = async(claimContract) => {
+    // Fetch contract data
+    fetchAndParseMint(claimContract, getProvider().connection);
+  }
+
+  const loadData = async() => {
+    const provider = getProvider();
+    const program = new Program(idl,programID,provider);
+    let claimContract;
+    [claimContract] = await anchor.web3.PublicKey.findProgramAddress([
+      anchor.utils.bytes.utf8.encode(contractId)
+    ], 
+    program.programId);
+    console.log('claimContract', claimContract.toString());
+    console.log('program.programId', program.programId.toString());
+    getContractData(claimContract);
+  }
+
+  const onLoad = async () => {
     checkIfWalletIsConnected();
-    // getPosts();
   };
 
   const connectWalletRenderPopup = async () => { //first time users are connecting to wallet this function will activate
@@ -85,10 +118,8 @@ const App = () => {
     }
   };
 
-  const connect = () => {
-    return (
-      <button onClick={connectWalletRenderPopup} className="buttonStyle"> {Loading ? <p>loading...</p>: <p>Connect Your Wallet To Post </p>}    </button>
-    );
+  const disconnectWalletRenderPopup = async () => { //first time users are connecting to wallet this function will activate
+    setWalletAddress(null);
   };
 
   const initContract = async() => {
@@ -151,7 +182,7 @@ const App = () => {
         claimAccount,
         treasury, //: new PublicKey('BqZUhaHrdBxyX8Rkqva5cmQb8nuoZztaRzpRmDZFpNt5'),
         treasuryTokenAccount: new PublicKey('jkmbmZKfdBdFwQit12tPTCchFBGmhHFx58ANsH919Hz'),
-        claimerTokenAccount: new PublicKey('3gDPGmt2gtiqFY79ayYdtcvqQSHEXKYCWvPUQZ7ZyVfa'),
+        claimerTokenAccount: new PublicKey('DVN6VeweRmS3k1pG9oiLgduSk39hpfk2kzapjnUqeTLC'),
         claimContract,
         nftTokenAccount: new PublicKey('Czs8q51C3jfUNY9pXFwQ61Q7uc4H18gqFjQhrBvQeHC2'),
         nftMetadata: new PublicKey('sGHgm6DsCpG8WkhnEmNqzFDguq77xTERYr5QUtBJhpH'),
@@ -253,20 +284,52 @@ const App = () => {
 
   return (
     <div className='App'>
-      <div>
-        <a style={{color: 'white'}} onClick={() => initTreasury()}>INIT TREASURY</a>
+      <div style={{marginTop: '2px'}}>
+        <a style={{color: 'white', cursor: 'pointer'}} onClick={() => initTreasury()}>INIT TREASURY</a>
+      </div>
+      <div style={{marginTop: '2px'}}>
+        <a style={{color: 'white', cursor: 'pointer'}} onClick={() => initClaimV2()}>INIT CLAIM</a>
+      </div>
+      <div style={{marginTop: '2px'}}>
+        <a style={{color: 'white', cursor: 'pointer'}} onClick={() => initContract()}>INIT CONTRACT</a>
+      </div>
+      <div style={{marginTop: '2px'}}>
+        <a style={{color: 'white', cursor: 'pointer'}} onClick={() => addToTreasury()}>ADD TO TREASURY</a>
+      </div>
+      <div style={{marginTop: '2px'}}>
+        <a style={{color: 'white', cursor: 'pointer'}} onClick={() => loadData()}>LOAD DATA</a>
+      </div>
+      <div style={{marginTop: '20px'}}>
+        <a style={{color: 'white', cursor: 'pointer'}} onClick={() => connectWalletRenderPopup()}>{walletaddress ? walletaddress : 'CONNECT'}</a>
       </div>
       <div>
-        <a style={{color: 'white'}} onClick={() => initClaimV2()}>INIT CLAIM</a>
+        <a style={{color: 'white', cursor: 'pointer'}} onClick={() => disconnectWalletRenderPopup()}>{walletaddress ? 'DISCONNECT' : ''}</a>
       </div>
-      <div>
-        <a style={{color: 'white'}} onClick={() => initContract()}>INIT CONTRACT</a>
-      </div>
-      <div>
-        <a style={{color: 'white'}} onClick={() => addToTreasury()}>ADD TO TREASURY</a>
-      </div>
+      {
+        contract != null ? (
+          <div>
+            <div style={{marginTop: '15px'}}>
+              <span style={{color: 'white'}}>LIMIT: {Number(contract.limit)}</span>
+            </div>
+            <div style={{marginTop: '1px'}}>
+              <span style={{color: 'white'}}>CLAIMED: {Number(contract.claimed)}</span>
+            </div>
+            <div style={{marginTop: '1px'}}>
+              <span style={{color: 'white'}}>IS ACTIVE: {contract.isActive.toString()}</span>
+            </div>
+          </div>
+        ) : ''
+      }
     </div>
   );
 };
 
 export default App;
+
+export const MintLayout = struct([
+  u64('discriminator'),
+  bool('isActive'),
+  u64('claimed'),
+  u64('limit'),
+  u8('bump')
+]);
