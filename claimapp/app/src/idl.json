@@ -11,6 +11,22 @@
           "isSigner": false
         },
         {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Token mint"
+          ]
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Update Authority"
+          ]
+        },
+        {
           "name": "signer",
           "isMut": true,
           "isSigner": true
@@ -24,6 +40,14 @@
       "args": [
         {
           "name": "limit",
+          "type": "u64"
+        },
+        {
+          "name": "collectionName",
+          "type": "string"
+        },
+        {
+          "name": "claimAmount",
           "type": "u64"
         }
       ]
@@ -69,6 +93,11 @@
           "name": "treasuryTokenAccount",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "claimContract",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "tokenProgram",
@@ -216,7 +245,12 @@
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "newTokenAccount",
+          "type": "bool"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -284,6 +318,22 @@
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "mint",
+            "type": "publicKey"
+          },
+          {
+            "name": "updateAuthority",
+            "type": "publicKey"
+          },
+          {
+            "name": "collectionName",
+            "type": "string"
+          },
+          {
+            "name": "claimAmount",
+            "type": "u64"
           }
         ]
       }
