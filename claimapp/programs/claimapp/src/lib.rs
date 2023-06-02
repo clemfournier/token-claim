@@ -396,7 +396,7 @@ pub struct InitClaim<'info> {
     pub claim_contract: Account<'info, Contract>,
 
     #[account(
-        // OWNER VERIFICATION, UNCOMMENT LATER
+        // TODO: OWNER VERIFICATION, UNCOMMENT LATER
         // constraint = nft_token_account.owner == signer.key(),
         constraint = nft_token_account.amount == 1,
     )]
@@ -405,8 +405,8 @@ pub struct InitClaim<'info> {
     /// CHECK: This is not dangerous because the nft_metadata is not mutable
     pub nft_metadata: AccountInfo<'info>,
 
-    token_program: Program<'info, Token>,
-    rent: Sysvar<'info, Rent>,
+    // token_program: Program<'info, Token>,
+    // rent: Sysvar<'info, Rent>,
     system_program: Program<'info, System>,
 }
 
