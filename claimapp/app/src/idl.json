@@ -53,6 +53,52 @@
       ]
     },
     {
+      "name": "updateContract",
+      "accounts": [
+        {
+          "name": "claimContract",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Update Authority"
+          ]
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "limit",
+          "type": "u64"
+        },
+        {
+          "name": "collectionName",
+          "type": "string"
+        },
+        {
+          "name": "claimAmount",
+          "type": "u64"
+        },
+        {
+          "name": "isActive",
+          "type": "bool"
+        }
+      ]
+    },
+    {
       "name": "initTreasury",
       "accounts": [
         {
@@ -231,11 +277,6 @@
         },
         {
           "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
           "isMut": false,
           "isSigner": false
         },
