@@ -337,6 +337,7 @@ pub struct InitContract<'info> {
     mint: Account<'info, Mint>,
 
     /// Update Authority
+    /// CHECK: This is fine
     update_authority: AccountInfo<'info>,
 
     // Signer, has to be an owner
