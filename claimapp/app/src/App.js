@@ -7,7 +7,7 @@ import { Connection, PublicKey, clusterApiUrl, SYSVAR_RENT_PUBKEY } from '@solan
 import { Program, AnchorProvider } from '@project-serum/anchor';
 import * as splToken from "@solana/spl-token";
 import { publicKey, u64, bool } from '@solana/buffer-layout-utils';
-import { u32, u8, struct } from '@solana/buffer-layout';
+import { u32, u8, struct, blob } from '@solana/buffer-layout';
 
 window.Buffer = Buffer
 const programID = new PublicKey(idl.metadata.address)
@@ -19,9 +19,9 @@ const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ
 const mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
 const nftTokenAccount = new PublicKey('Czs8q51C3jfUNY9pXFwQ61Q7uc4H18gqFjQhrBvQeHC2');
 const nftMetadata = new PublicKey('sGHgm6DsCpG8WkhnEmNqzFDguq77xTERYr5QUtBJhpH');
-const treasuryId = 'treasury8';
-const contractId = 'contract8';
-const claimId = 'claim8';
+const treasuryId = 'treasury9';
+const contractId = 'contract9';
+const claimId = 'claim9';
 
 const App = () => {
   const [Loading, setLoading] = useState(false)
@@ -98,6 +98,8 @@ const App = () => {
         // console.log(`Step - 2: Deserializing Found Account Data`);
         const deserialized = MintLayout.decode(data);
         console.log(deserialized);
+        console.log(deserialized.mint.toString());
+        console.log(deserialized.update_authority.toString());
         setContract(deserialized);
     }
     catch {
@@ -152,15 +154,47 @@ const App = () => {
       const signer = new PublicKey(walletaddress);
       // let escrow = anchor.web3.Keypair.generate();
       let contract;
-      [contract] = await anchor.web3.PublicKey.findProgramAddress([
+      [contract] = anchor.web3.PublicKey.findProgramAddressSync([
         anchor.utils.bytes.utf8.encode(contractId)
       ], 
       program.programId);
       console.log('claimContract', contract.toString(), 'signer', signer.toString());
       const limit = new anchor.BN(10);
-      const tx = await program.methods.initContract(limit)
+      const claimAmount = new anchor.BN(100000000);
+      const tx = await program.methods.initContract(limit, 'VU5ERVJET0cAAA==', claimAmount)
       .accounts({
         claimContract: contract,
+        mint: new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US'),
+        updateAuthority: new PublicKey('En54STTsmVrWA3Cd43SQNgiLrihRDG2iMJD6zWPHjYfW'),
+        signer,
+        systemProgram: anchor.web3.SystemProgram.programId
+      })
+      .rpc({skipPreflight: true});
+
+      console.log("TxSig :: ", tx);
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+
+  const updateContract = async() => {
+    try {
+      const provider = getProvider();
+      const program = new Program(idl,programID,provider);
+      const signer = new PublicKey(walletaddress);
+      // let escrow = anchor.web3.Keypair.generate();
+      let contract;
+      [contract] = anchor.web3.PublicKey.findProgramAddressSync([
+        anchor.utils.bytes.utf8.encode(contractId)
+      ], 
+      program.programId);
+      console.log('claimContract', contract.toString(), 'signer', signer.toString());
+      const limit = new anchor.BN(10);
+      const claimAmount = new anchor.BN(100000);
+      const tx = await program.methods.updateContract(limit, 'VU5ERVJET0cAAA==', claimAmount, true)
+      .accounts({
+        claimContract: contract,
+        updateAuthority: new PublicKey('En54STTsmVrWA3Cd43SQNgiLrihRDG2iMJD6zWPHjYfW'),
         signer,
         systemProgram: anchor.web3.SystemProgram.programId
       })
@@ -202,7 +236,7 @@ const App = () => {
       const treasuryTokenAccount = await getTokenAccountByAccountAndMint(treasury, mint, provider.connection);
       const claimerTokenAccount = await getTokenAccountByAccountAndMint(new PublicKey(walletaddress), mint, provider.connection);
 
-      const tx = await program.methods.initClaim()
+      const tx = await program.methods.initClaim(true)
       .accounts({
         signer,
         claimAccount,
@@ -245,6 +279,12 @@ const App = () => {
       ], 
       program.programId);
       const amount = new anchor.BN(1);
+      let claimContract;
+      [claimContract] = await anchor.web3.PublicKey.findProgramAddress([
+        anchor.utils.bytes.utf8.encode(contractId),
+        // depositor.toBuffer()
+      ], 
+      program.programId);
       // const amount = new anchor.BN(100000000);
       
       const tx = await program.methods.initTreasury(amount)
@@ -255,6 +295,7 @@ const App = () => {
           treasury: escrow,
           solTreasury: solTreasury.publicKey,
           treasuryTokenAccount: treasuryTokenAccount.publicKey,
+          claimContract,
           tokenProgram: splToken.TOKEN_PROGRAM_ID,
           rent: SYSVAR_RENT_PUBKEY,
           systemProgram: anchor.web3.SystemProgram.programId
@@ -286,7 +327,7 @@ const App = () => {
       let treasuryTokenAccount = await getTokenAccountByAccountAndMint(treasury, mint, provider.connection);
       
       const amount = new anchor.BN(1000000000);
-      const sol_amount = new anchor.BN(100000000);
+      const sol_amount = new anchor.BN(1000000000);
       
       const tx = await program.methods.addToTreasury(amount, sol_amount)
         .accounts({
@@ -324,6 +365,9 @@ const App = () => {
       <div style={{marginTop: '2px'}}>
         <a style={{color: 'white', cursor: 'pointer'}} onClick={() => loadData()}>LOAD DATA</a>
       </div>
+      <div style={{marginTop: '2px'}}>
+        <a style={{color: 'white', cursor: 'pointer'}} onClick={() => updateContract()}>UPDATE CONTRACT</a>
+      </div>
       <div style={{marginTop: '20px'}}>
         <a style={{color: 'white', cursor: 'pointer'}} onClick={() => connectWalletRenderPopup()}>{walletaddress ? walletaddress : 'CONNECT'}</a>
       </div>
@@ -356,5 +400,9 @@ export const MintLayout = struct([
   bool('isActive'),
   u64('claimed'),
   u64('limit'),
-  u8('bump')
+  u8('bump'),
+  publicKey('mint'),
+  publicKey('update_authority'),
+  u64('claim_amount'),
+  blob(32, 'collection_name')
 ]);
