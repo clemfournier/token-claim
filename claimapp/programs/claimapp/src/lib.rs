@@ -5,21 +5,15 @@ use solana_program::{pubkey, pubkey::Pubkey};
 use mpl_token_metadata;
 use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
 use base64;
-
-// declare_id!("6YF6WkHwsNwssuXWBi1BktqgpC27QyoJw9cd3VDrobZi");
 declare_id!("FReLJ3SZ6CAMg7QszqukqqtXC4yYdPv4pcu6ARajVAoG");
 
 #[program]
 pub mod claimapp {
     use super::*;
 
-    // pub const CLAIM_AMOUNT: u64 = 1;
     pub const TREASURY: &[u8] = b"treasury9";
     pub const CONTRACT: &[u8] = b"contract9";
     pub const CLAIM: &[u8] = b"claim9";
-    // pub const TOKEN_MINT: &Pubkey = &pubkey!("CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US");
-    // pub const NFT_UPDATE_AUTHORITY: &Pubkey = &pubkey!("En54STTsmVrWA3Cd43SQNgiLrihRDG2iMJD6zWPHjYfW");
-    // pub const NFT_SYMBOL: &str = "VU5ERVJET0cAAA==";
 
     pub const OWNERS: &[Pubkey] = &[
         pubkey!("EjvRc5HRynCfZu74QUDMs5iunHcKiSsyuKUxuNdgMFzz"),
@@ -47,7 +41,7 @@ pub mod claimapp {
 
     pub fn update_contract(ctx: Context<UpdateContract>, limit: u64, collection_name: String, claim_amount: u64, is_active: bool) -> Result<()> {
         // NICE TO HAVE (TO BE ABLE TO SHOW A NICE ERROR MESSAGE):
-        //// CHECK IF ENOUGH SOL TO CREATE THE CONTRACT
+        //// CHECK IF LIMIT UNDER THE CLAIMED AMOUNT? 
 
         ctx.accounts.claim_contract.is_active = is_active;
         ctx.accounts.claim_contract.limit = limit;
@@ -128,6 +122,9 @@ pub mod claimapp {
         // WAY MORE TEST
         // CHECK IF THE CLAIMER DIDNT ALREADY CLAIMED (SHOULD BE OK BECAUSE CANNOT CREATE THE PDA TWICE)
         // CHECK IF DIDNT REACH THE MAX CLAIMERS
+        // CHECK IF THE SOL VAULT HAS ENOUGH TOKENS (SHOULD FAIL BY ITSELF) -> DONE
+        // CHECK IF THE TOKEN VAULT HAS ENOUGH TOKENS (SHOULD FAIL BY ITSELF)
+        // CHECK IF WE REACHED THE LIMIT OF CLAIMS
 
         // MIGHT BE USEFUL CODE TO VERIFY DEEPER NFT 
         // let (metadata, _) = Pubkey::find_program_address(
@@ -191,13 +188,13 @@ pub mod claimapp {
         )?;
 
         // TRANSFER SOL TO THE OWNER TO PAY FOR THE TOKEN ACCOUNT(S) CREATION
-        // CHECK IF BONK TOKEN ACCOUNT AND CLAIM TOKEN ACCOUNT NEED TO BE CREATED
-
         let pda_cost: u64  = 1454640;
         let token_account_cost: u64 = 2039280;
 
         let mut total_cost: u64 = pda_cost;
 
+        // RISK: USER CAN MANUALLY PUT TRUE AND GET THE SOL TOKEN ACCOUNT FOR FREE
+        //       BUT SINCE THE CLAIM CAN'T BE CALLED TWICE, IT'S NOT A BIG DEAL 
         if new_token_account == true {
             total_cost += token_account_cost;
         }
@@ -206,7 +203,6 @@ pub mod claimapp {
         let owner_account_info: &mut AccountInfo = &mut ctx.accounts.signer.to_account_info();
 
         let vault_lamports_initial = vault_account_info.lamports();
-        //let owner_lamports_initial = owner_account_info.lamports();
 
         if vault_lamports_initial < pda_cost {
             return err!(CustomErrorCode::VaultDoesntHaveEnoughSol);
@@ -215,38 +211,18 @@ pub mod claimapp {
         **owner_account_info.lamports.borrow_mut() += total_cost;
         **vault_account_info.lamports.borrow_mut() -= total_cost;
 
-        // UPDATE CONTRACT DATA
-        // CHECK IF WE REACHED THE LIMIT
         ctx.accounts.claim_contract.claimed += 1;
 
-        msg!("{0} claimed {1} tokens, for NFT {2}. {3} people have now claimed for {4} max", 
+        msg!("{0} claimed {1} tokens, for NFT {2}. {3}/{4} claimed", 
             ctx.accounts.signer.key(),
             ctx.accounts.claim_contract.claim_amount,
             ctx.accounts.nft_token_account.mint.key(),
             ctx.accounts.claim_contract.claimed, 
             ctx.accounts.claim_contract.limit
         );
-
-        msg!("Created a new claim account {0}, mint {1} owner {2} amount {3}", 
-            ctx.accounts.claim_account.key(),
-            ctx.accounts.nft_token_account.mint.key(),
-            ctx.accounts.signer.key(),
-            ctx.accounts.claim_contract.claim_amount
-        );
     
         Ok(())
     }
-
-        // anchor_spl::token::close_account(CpiContext::new_with_signer(
-        //     ctx.accounts.token_program.to_account_info(),
-        //     anchor_spl::token::CloseAccount {
-        //         account: ctx.accounts.escrowed_x_tokens.to_account_info(),
-        //         destination: ctx.accounts.seller.to_account_info(),
-        //         authority: ctx.accounts.escrow.to_account_info(),
-        //     },
-        //     &[&["escrow6".as_bytes(), ctx.accounts.seller.key().as_ref(), &[ctx.accounts.escrow.bump]]],
-        // ))?;
-
 }
 
 #[derive(Accounts)]
