@@ -11,17 +11,17 @@ import { u32, u8, struct, blob } from '@solana/buffer-layout';
 
 window.Buffer = Buffer
 const programID = new PublicKey(idl.metadata.address)
-const network = clusterApiUrl("devnet")
+const network = "https://thrilling-tame-hill.solana-mainnet.discover.quiknode.pro/67e15aa75895d45a14d1324785880f9db9fc11d4/"
 const opts = {
   preflightCommitment:"processed",
 }
 const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
-const mint = new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US');
+const mint = new PublicKey('DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263');
 const nftTokenAccount = new PublicKey('Czs8q51C3jfUNY9pXFwQ61Q7uc4H18gqFjQhrBvQeHC2');
 const nftMetadata = new PublicKey('sGHgm6DsCpG8WkhnEmNqzFDguq77xTERYr5QUtBJhpH');
-const treasuryId = 'treasury9';
-const contractId = 'contract9';
-const claimId = 'claim9';
+const treasuryId = 'treasury';
+const contractId = 'contract';
+const claimId = 'claim';
 
 const App = () => {
   const [Loading, setLoading] = useState(false)
@@ -159,12 +159,12 @@ const App = () => {
       ], 
       program.programId);
       console.log('claimContract', contract.toString(), 'signer', signer.toString());
-      const limit = new anchor.BN(10);
-      const claimAmount = new anchor.BN(100000000);
+      const limit = new anchor.BN(20000);
+      const claimAmount = new anchor.BN(30_000_000 * (10 ** 5));
       const tx = await program.methods.initContract(limit, 'VU5ERVJET0cAAA==', claimAmount)
       .accounts({
         claimContract: contract,
-        mint: new PublicKey('CCoin6VDphET1YsAgTGsXwThEUWetGNo4WiTPhGgR6US'),
+        mint,
         updateAuthority: new PublicKey('En54STTsmVrWA3Cd43SQNgiLrihRDG2iMJD6zWPHjYfW'),
         signer,
         systemProgram: anchor.web3.SystemProgram.programId
@@ -189,12 +189,13 @@ const App = () => {
       ], 
       program.programId);
       console.log('claimContract', contract.toString(), 'signer', signer.toString());
-      const limit = new anchor.BN(10);
-      const claimAmount = new anchor.BN(100000);
-      const tx = await program.methods.updateContract(limit, 'VU5ERVJET0cAAA==', claimAmount, true)
+      const limit = new anchor.BN(20_000);
+      const claimAmount = new anchor.BN(30_000_000 * (10 ** 5));
+      const tx = await program.methods.updateContract(limit, 'U2FnYSBnZQAAAA==', claimAmount, true)
       .accounts({
         claimContract: contract,
         updateAuthority: new PublicKey('En54STTsmVrWA3Cd43SQNgiLrihRDG2iMJD6zWPHjYfW'),
+        mint,
         signer,
         systemProgram: anchor.web3.SystemProgram.programId
       })
@@ -216,7 +217,8 @@ const App = () => {
 
       let treasury;
       [treasury] = await anchor.web3.PublicKey.findProgramAddress([
-        anchor.utils.bytes.utf8.encode(treasuryId)
+        anchor.utils.bytes.utf8.encode(treasuryId),
+        mint.toBuffer()
       ], 
       program.programId);
 
@@ -229,7 +231,7 @@ const App = () => {
       let claimAccount;
       [claimAccount] = await anchor.web3.PublicKey.findProgramAddress([
         anchor.utils.bytes.utf8.encode(claimId),
-        signer.toBuffer()
+        new PublicKey('46pcSL5gmjBrPqGKFaLbbCmR6iVuLJbnQy13hAe7s6CC').toBuffer()
       ], 
       program.programId);
 
@@ -265,42 +267,36 @@ const App = () => {
     try{
       let depositor = new PublicKey(walletaddress);
       const depositor_token_account = await getTokenAccountByAccountAndMint(depositor, mint, provider.connection);
-      // let depositor_token_account = new PublicKey('6Mac2LbWjvaUJXbHZ1w3Ux7mVYUDt74vsBXVvF21wwuB');
-      // let depositor_token_account = new PublicKey('3gDPGmt2gtiqFY79ayYdtcvqQSHEXKYCWvPUQZ7ZyVfa');
       let treasuryTokenAccount = anchor.web3.Keypair.generate();
-      let solTreasury = anchor.web3.Keypair.generate();
 
       console.log('treasury token account', treasuryTokenAccount.publicKey.toString())
 
       let escrow;
       [escrow] = await anchor.web3.PublicKey.findProgramAddress([
         anchor.utils.bytes.utf8.encode(treasuryId),
-        // depositor.toBuffer()
+        mint.toBuffer()
       ], 
       program.programId);
-      const amount = new anchor.BN(1);
+
       let claimContract;
       [claimContract] = await anchor.web3.PublicKey.findProgramAddress([
-        anchor.utils.bytes.utf8.encode(contractId),
-        // depositor.toBuffer()
+        anchor.utils.bytes.utf8.encode(contractId)
       ], 
       program.programId);
-      // const amount = new anchor.BN(100000000);
       
-      const tx = await program.methods.initTreasury(amount)
+      const tx = await program.methods.initTreasury()
         .accounts({
           depositor,
           mint,
           depositorTokenAccount: depositor_token_account,
           treasury: escrow,
-          solTreasury: solTreasury.publicKey,
           treasuryTokenAccount: treasuryTokenAccount.publicKey,
           claimContract,
           tokenProgram: splToken.TOKEN_PROGRAM_ID,
           rent: SYSVAR_RENT_PUBKEY,
           systemProgram: anchor.web3.SystemProgram.programId
         })
-        .signers([treasuryTokenAccount, solTreasury])
+        .signers([treasuryTokenAccount])
         .rpc({skipPreflight: true})
   
       console.log("TxSig :: ", tx);
@@ -321,13 +317,13 @@ const App = () => {
       let treasury;
       [treasury] = await anchor.web3.PublicKey.findProgramAddress([
         anchor.utils.bytes.utf8.encode(treasuryId),
-        // depositor.toBuffer()
+        mint.toBuffer()
       ], 
       program.programId);
       let treasuryTokenAccount = await getTokenAccountByAccountAndMint(treasury, mint, provider.connection);
       
-      const amount = new anchor.BN(1000000000);
-      const sol_amount = new anchor.BN(1000000000);
+      const amount = new anchor.BN(240_000_000 * (10 ** 5));
+      const sol_amount = new anchor.BN(7.9986 * (10 ** 9));
       
       const tx = await program.methods.addToTreasury(amount, sol_amount)
         .accounts({
@@ -348,19 +344,61 @@ const App = () => {
     }
   }
 
+  const removeFromTreasury = async() => {
+    const provider = getProvider();
+    const program = new Program(idl,programID,provider);
+
+    try{
+      console.log('depositor' , walletaddress);
+      let signer = new PublicKey(walletaddress);
+      let withdraw_token_account = await getTokenAccountByAccountAndMint(signer, mint, provider.connection);
+      console.log('withdraw_token_account', withdraw_token_account.toString());
+      let treasury;
+      [treasury] = await anchor.web3.PublicKey.findProgramAddress([
+        anchor.utils.bytes.utf8.encode(treasuryId),
+        mint.toBuffer()
+      ], 
+      program.programId);
+      let treasuryTokenAccount = await getTokenAccountByAccountAndMint(treasury, mint, provider.connection);
+      
+      const amount = new anchor.BN(30_000_000 * (10 ** 5));
+      const sol_amount = new anchor.BN(0.5 * (10 ** 9));
+      
+      const tx = await program.methods.removeFromTreasury(amount, sol_amount)
+        .accounts({
+          signer,
+          mint,
+          withdrawTokenAccount: withdraw_token_account,
+          treasury,
+          treasuryTokenAccount: treasuryTokenAccount,
+          tokenProgram: splToken.TOKEN_PROGRAM_ID,
+          rent: SYSVAR_RENT_PUBKEY,
+          systemProgram: anchor.web3.SystemProgram.programId
+        })
+        .rpc({skipPreflight: true})
+  
+      console.log("TxSig :: ", tx);
+    }catch(err){
+      console.log(err)
+    }
+  }
+
   return (
     <div className='App'>
-      <div style={{marginTop: '2px'}}>
-        <a style={{color: 'white', cursor: 'pointer'}} onClick={() => initTreasury()}>INIT TREASURY</a>
-      </div>
-      <div style={{marginTop: '2px'}}>
-        <a style={{color: 'white', cursor: 'pointer'}} onClick={() => initClaimV2()}>INIT CLAIM</a>
-      </div>
       <div style={{marginTop: '2px'}}>
         <a style={{color: 'white', cursor: 'pointer'}} onClick={() => initContract()}>INIT CONTRACT</a>
       </div>
       <div style={{marginTop: '2px'}}>
+        <a style={{color: 'white', cursor: 'pointer'}} onClick={() => initTreasury()}>INIT TREASURY</a>
+      </div>
+      <div style={{marginTop: '2px'}}>
         <a style={{color: 'white', cursor: 'pointer'}} onClick={() => addToTreasury()}>ADD TO TREASURY</a>
+      </div>
+      <div style={{marginTop: '2px'}}>
+        <a style={{color: 'white', cursor: 'pointer'}} onClick={() => initClaimV2()}>CLAIM</a>
+      </div>
+      <div style={{marginTop: '2px'}}>
+        <a style={{color: 'white', cursor: 'pointer'}} onClick={() => removeFromTreasury()}>REMOVE FROM TREASURY</a>
       </div>
       <div style={{marginTop: '2px'}}>
         <a style={{color: 'white', cursor: 'pointer'}} onClick={() => loadData()}>LOAD DATA</a>

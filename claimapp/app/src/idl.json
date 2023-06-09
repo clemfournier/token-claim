@@ -13,18 +13,12 @@
         {
           "name": "mint",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Token mint"
-          ]
+          "isSigner": false
         },
         {
           "name": "updateAuthority",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Update Authority"
-          ]
+          "isSigner": false
         },
         {
           "name": "signer",
@@ -63,10 +57,12 @@
         {
           "name": "updateAuthority",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Update Authority"
-          ]
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "signer",
@@ -104,36 +100,17 @@
         {
           "name": "depositor",
           "isMut": true,
-          "isSigner": true,
-          "docs": [
-            "Deposit authority"
-          ]
+          "isSigner": true
         },
         {
           "name": "mint",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Token mint"
-          ]
-        },
-        {
-          "name": "depositorTokenAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "ATA of x_mint"
-          ]
+          "isSigner": false
         },
         {
           "name": "treasury",
           "isMut": true,
           "isSigner": false
-        },
-        {
-          "name": "solTreasury",
-          "isMut": true,
-          "isSigner": true
         },
         {
           "name": "treasuryTokenAccount",
@@ -161,12 +138,7 @@
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "amount",
-          "type": "u64"
-        }
-      ]
+      "args": []
     },
     {
       "name": "addToTreasury",
@@ -174,26 +146,72 @@
         {
           "name": "depositor",
           "isMut": true,
-          "isSigner": true,
-          "docs": [
-            "Deposit authority, owner only"
-          ]
+          "isSigner": true
         },
         {
           "name": "mint",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Token mint"
-          ]
+          "isSigner": false
         },
         {
           "name": "depositorTokenAccount",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "ATA of x_mint"
-          ]
+          "isSigner": false
+        },
+        {
+          "name": "treasury",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "amountSol",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "removeFromTreasury",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "withdrawTokenAccount",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "treasury",
@@ -424,9 +442,24 @@
       "code": 6003,
       "name": "VaultDoesntHaveEnoughSol",
       "msg": "Vault doesnt have enough SOL"
+    },
+    {
+      "code": 6004,
+      "name": "VaultDoesntHaveEnoughBonk",
+      "msg": "Vault doesnt have enough BONK"
+    },
+    {
+      "code": 6005,
+      "name": "UserDoesntHaveEnoughSol",
+      "msg": "User doesnt have enough SOL"
+    },
+    {
+      "code": 6006,
+      "name": "UserDoesntHaveEnoughBonk",
+      "msg": "User doesnt have enough BONK"
     }
   ],
   "metadata": {
-    "address": "FReLJ3SZ6CAMg7QszqukqqtXC4yYdPv4pcu6ARajVAoG"
+    "address": "48bnV7CQtsABWFfP2DFneotR5AWjcrFoTLKdEkWmNNj4"
   }
 }

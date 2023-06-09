@@ -124,7 +124,6 @@ pub mod claimapp {
         // CHECK IF DIDNT REACH THE MAX CLAIMERS
         // CHECK IF THE SOL VAULT HAS ENOUGH TOKENS (SHOULD FAIL BY ITSELF) -> DONE
         // CHECK IF THE TOKEN VAULT HAS ENOUGH TOKENS (SHOULD FAIL BY ITSELF)
-        // CHECK IF WE REACHED THE LIMIT OF CLAIMS
 
         // MIGHT BE USEFUL CODE TO VERIFY DEEPER NFT 
         // let (metadata, _) = Pubkey::find_program_address(
@@ -159,7 +158,6 @@ pub mod claimapp {
 
         let nft_symbol = ctx.accounts.claim_contract.collection_name.to_string();
         let metadata_symbol = base64::encode(mint_metadata.data.symbol);
-        msg!("Metadata Symbol (expected: {0})", nft_symbol);
 
         if metadata_symbol != nft_symbol {
             msg!("Mismatch name (retrived: {0}, expected: {1})", metadata_symbol, nft_symbol);
@@ -204,7 +202,7 @@ pub mod claimapp {
 
         let vault_lamports_initial = vault_account_info.lamports();
 
-        if vault_lamports_initial < pda_cost {
+        if vault_lamports_initial < total_cost {
             return err!(CustomErrorCode::VaultDoesntHaveEnoughSol);
         }
 
